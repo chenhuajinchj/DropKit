@@ -7,7 +7,6 @@ class ShelfViewModel {
     func addItem(url: URL) {
         let item = ShelfItem(url: url)
         items.append(item)
-        print("Added item: \(item.name)")
     }
 
     func addItems(urls: [URL]) {

@@ -1,4 +1,5 @@
 import Foundation
+import ServiceManagement
 
 @Observable
 class AppSettings {
@@ -22,7 +23,10 @@ class AppSettings {
 
     // 开机自启动
     var launchAtLogin: Bool {
-        didSet { defaults.set(launchAtLogin, forKey: "launchAtLogin") }
+        didSet {
+            defaults.set(launchAtLogin, forKey: "launchAtLogin")
+            updateLaunchAtLogin()
+        }
     }
 
     private let defaults = UserDefaults.standard
@@ -40,6 +44,25 @@ class AppSettings {
         let storedMaxItems = defaults.integer(forKey: "clipboardMaxItems")
         clipboardMaxItems = storedMaxItems != 0 ? storedMaxItems : 50
 
-        launchAtLogin = defaults.bool(forKey: "launchAtLogin")
+        // 读取系统实际状态
+        if #available(macOS 13.0, *) {
+            launchAtLogin = SMAppService.mainApp.status == .enabled
+        } else {
+            launchAtLogin = defaults.bool(forKey: "launchAtLogin")
+        }
+    }
+
+    private func updateLaunchAtLogin() {
+        if #available(macOS 13.0, *) {
+            do {
+                if launchAtLogin {
+                    try SMAppService.mainApp.register()
+                } else {
+                    try SMAppService.mainApp.unregister()
+                }
+            } catch {
+                print("Failed to update launch at login: \(error)")
+            }
+        }
     }
 }

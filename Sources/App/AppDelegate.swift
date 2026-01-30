@@ -10,8 +10,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     let settingsWindowController = SettingsWindowController()
 
     func applicationDidFinishLaunching(_ notification: Notification) {
-        print("DropKit launched")
-
         // 创建悬浮窗（默认隐藏）
         shelfPanel = ShelfPanel()
 
@@ -106,6 +104,5 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         dragMonitor.stop()
         shakeDetector.stop()
         clipboardMonitor.stop()
-        print("DropKit terminating")
     }
 }
