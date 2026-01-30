@@ -5,7 +5,7 @@ class ShelfPanel: NSPanel {
 
     init() {
         super.init(
-            contentRect: NSRect(x: 0, y: 0, width: 300, height: 400),
+            contentRect: NSRect(x: 0, y: 0, width: 180, height: 220),
             styleMask: [.borderless, .nonactivatingPanel],
             backing: .buffered,
             defer: false
@@ -29,8 +29,8 @@ class ShelfPanel: NSPanel {
         hidesOnDeactivate = false
 
         // 添加毛玻璃背景视图
-        let visualEffect = NSVisualEffectView(frame: contentView?.bounds ?? .zero)
-        visualEffect.autoresizingMask = [.width, .height]
+        let visualEffect = NSVisualEffectView()
+        visualEffect.translatesAutoresizingMaskIntoConstraints = false
         visualEffect.blendingMode = .behindWindow
         visualEffect.material = .hudWindow
         visualEffect.state = .active
@@ -39,6 +39,28 @@ class ShelfPanel: NSPanel {
         visualEffect.layer?.masksToBounds = true
 
         contentView?.addSubview(visualEffect)
+
+        // visualEffect 约束到 contentView
+        if let contentView = contentView {
+            NSLayoutConstraint.activate([
+                visualEffect.topAnchor.constraint(equalTo: contentView.topAnchor),
+                visualEffect.bottomAnchor.constraint(equalTo: contentView.bottomAnchor),
+                visualEffect.leadingAnchor.constraint(equalTo: contentView.leadingAnchor),
+                visualEffect.trailingAnchor.constraint(equalTo: contentView.trailingAnchor)
+            ])
+        }
+
+        // 嵌入 SwiftUI 视图到毛玻璃视图内部
+        let hostingView = NSHostingView(rootView: ShelfView())
+        hostingView.translatesAutoresizingMaskIntoConstraints = false
+        visualEffect.addSubview(hostingView)
+
+        NSLayoutConstraint.activate([
+            hostingView.topAnchor.constraint(equalTo: visualEffect.topAnchor),
+            hostingView.bottomAnchor.constraint(equalTo: visualEffect.bottomAnchor),
+            hostingView.leadingAnchor.constraint(equalTo: visualEffect.leadingAnchor),
+            hostingView.trailingAnchor.constraint(equalTo: visualEffect.trailingAnchor)
+        ])
 
         // 居中显示
         center()

@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		7CF8080589D6B8D09CA7B494 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 984A94B1DD1567F47CCB76A7 /* AppDelegate.swift */; };
+		8E137FA90409E7D2EE6D143D /* ShelfView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C44A4C24A904E0FC70DFC2C2 /* ShelfView.swift */; };
 		B1E9E1FC8D757F98DC7C7B87 /* DropKitApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5EEC229DE839084ADB696709 /* DropKitApp.swift */; };
 		C08FD2F76FA34B05F411E72B /* ShelfPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = F00441888AE62FF9BB4E0B6B /* ShelfPanel.swift */; };
 		D0A8D5038B0477210ED0046A /* DropKitTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7004D6682C39FC89EB7148B /* DropKitTests.swift */; };
@@ -32,6 +33,7 @@
 		984A94B1DD1567F47CCB76A7 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		9EDA4B4D81A0ED80CA247906 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		A7004D6682C39FC89EB7148B /* DropKitTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DropKitTests.swift; sourceTree = "<group>"; };
+		C44A4C24A904E0FC70DFC2C2 /* ShelfView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShelfView.swift; sourceTree = "<group>"; };
 		E251CAA34023A49B39C6440A /* DropKit.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = DropKit.entitlements; sourceTree = "<group>"; };
 		F00441888AE62FF9BB4E0B6B /* ShelfPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShelfPanel.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -51,6 +53,7 @@
 			isa = PBXGroup;
 			children = (
 				F00441888AE62FF9BB4E0B6B /* ShelfPanel.swift */,
+				C44A4C24A904E0FC70DFC2C2 /* ShelfView.swift */,
 			);
 			path = Shelf;
 			sourceTree = "<group>";
@@ -197,6 +200,7 @@
 				FA4D571EB5406BA943E4742D /* AppState.swift in Sources */,
 				B1E9E1FC8D757F98DC7C7B87 /* DropKitApp.swift in Sources */,
 				C08FD2F76FA34B05F411E72B /* ShelfPanel.swift in Sources */,
+				8E137FA90409E7D2EE6D143D /* ShelfView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
