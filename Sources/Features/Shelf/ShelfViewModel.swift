@@ -15,4 +15,17 @@ class ShelfViewModel {
             addItem(url: url)
         }
     }
+
+    func removeItem(_ item: ShelfItem) {
+        items.removeAll { $0.id == item.id }
+    }
+
+    func removeItem(at index: Int) {
+        guard items.indices.contains(index) else { return }
+        items.remove(at: index)
+    }
+
+    func clearAll() {
+        items.removeAll()
+    }
 }

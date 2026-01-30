@@ -2,16 +2,38 @@ import SwiftUI
 
 struct ShelfView: View {
     var viewModel: ShelfViewModel
+    var onClose: (() -> Void)?
 
     var body: some View {
-        Group {
-            if viewModel.items.isEmpty {
-                emptyStateView
-            } else {
-                itemsListView
+        VStack(spacing: 0) {
+            // 标题栏
+            HStack {
+                Text("暂存架")
+                    .font(.headline)
+                Spacer()
+                Button {
+                    onClose?()
+                } label: {
+                    Image(systemName: "xmark.circle.fill")
+                        .foregroundStyle(.secondary)
+                }
+                .buttonStyle(.plain)
             }
+            .padding(.horizontal, 12)
+            .padding(.vertical, 8)
+
+            Divider()
+
+            // 内容区域
+            Group {
+                if viewModel.items.isEmpty {
+                    emptyStateView
+                } else {
+                    itemsListView
+                }
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
     private var emptyStateView: some View {
@@ -41,6 +63,13 @@ struct ShelfView: View {
                             .lineLimit(1)
                             .truncationMode(.middle)
                         Spacer()
+                        Button {
+                            viewModel.removeItem(item)
+                        } label: {
+                            Image(systemName: "xmark.circle.fill")
+                                .foregroundStyle(.secondary)
+                        }
+                        .buttonStyle(.plain)
                     }
                     .padding(.horizontal, 12)
                     .padding(.vertical, 8)
@@ -55,7 +84,7 @@ struct ShelfView: View {
 }
 
 #Preview {
-    ShelfView(viewModel: ShelfViewModel())
+    ShelfView(viewModel: ShelfViewModel(), onClose: {})
         .frame(width: 180, height: 220)
         .background(.regularMaterial)
 }

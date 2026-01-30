@@ -3,6 +3,7 @@ import SwiftUI
 
 class ShelfPanel: NSPanel {
     let viewModel = ShelfViewModel()
+    private var clickMonitor: Any?
 
     init() {
         super.init(
@@ -57,7 +58,9 @@ class ShelfPanel: NSPanel {
         ])
 
         // 嵌入 SwiftUI 视图到毛玻璃视图内部
-        let hostingView = NSHostingView(rootView: ShelfView(viewModel: viewModel))
+        let hostingView = NSHostingView(rootView: ShelfView(viewModel: viewModel, onClose: { [weak self] in
+            self?.hidePanel()
+        }))
         hostingView.translatesAutoresizingMaskIntoConstraints = false
         visualEffect.addSubview(hostingView)
 
@@ -77,4 +80,43 @@ class ShelfPanel: NSPanel {
 
     // 点击外部不自动关闭
     override var canBecomeMain: Bool { false }
+
+    // MARK: - Show/Hide
+
+    func showPanel() {
+        orderFront(nil)
+        startClickMonitor()
+    }
+
+    func hidePanel() {
+        stopClickMonitor()
+        orderOut(nil)
+    }
+
+    private func startClickMonitor() {
+        stopClickMonitor()
+        clickMonitor = NSEvent.addGlobalMonitorForEvents(matching: [.leftMouseDown, .rightMouseDown]) { [weak self] event in
+            guard let self = self, self.isVisible else { return }
+            let screenLocation = NSEvent.mouseLocation
+
+            // 检查点击是否在窗口外部
+            if !self.frame.contains(screenLocation) {
+                // 只有悬浮窗为空时才关闭
+                if self.viewModel.items.isEmpty {
+                    self.hidePanel()
+                }
+            }
+        }
+    }
+
+    private func stopClickMonitor() {
+        if let monitor = clickMonitor {
+            NSEvent.removeMonitor(monitor)
+            clickMonitor = nil
+        }
+    }
+
+    deinit {
+        stopClickMonitor()
+    }
 }

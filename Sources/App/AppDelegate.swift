@@ -19,7 +19,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     private func setupMenuBar() {
         menuBarController.onShowShelf = { [weak self] in
             self?.shelfPanel?.center()
-            self?.shelfPanel?.orderFront(nil)
+            self?.shelfPanel?.showPanel()
         }
 
         menuBarController.onShowSettings = {
@@ -82,7 +82,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         originY = max(screenFrame.minY, min(originY, screenFrame.maxY - panelSize.height))
 
         panel.setFrameOrigin(NSPoint(x: originX, y: originY))
-        panel.orderFront(nil)
+        panel.showPanel()
     }
 
     func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
