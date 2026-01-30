@@ -94,19 +94,27 @@ struct CollapsedShelfView: View {
     }
 
     private var stackedThumbnailsView: some View {
-        ZStack {
-            // 扑克牌散开效果：轻微倾斜偏移
-            ForEach(Array(viewModel.items.prefix(3).enumerated().reversed()), id: \.element.id) { index, item in
-                thumbnailCard(for: item)
-                    .rotationEffect(.degrees(Double(index) * -3)) // 轻微倾斜
-                    .offset(x: CGFloat(index) * 5, y: CGFloat(index) * 2) // 轻微偏移
+        DraggableStackView(
+            urls: viewModel.items.map { $0.url },
+            onTap: { viewModel.expand() },
+            onFilesMovedOut: { movedUrls in
+                viewModel.removeItems(byUrls: movedUrls)
             }
+        ) {
+            AnyView(
+                ZStack {
+                    // 扑克牌散开效果：轻微倾斜偏移
+                    ForEach(Array(viewModel.items.prefix(3).enumerated().reversed()), id: \.element.id) { index, item in
+                        thumbnailCard(for: item)
+                            .rotationEffect(.degrees(Double(index) * -3)) // 轻微倾斜
+                            .offset(x: CGFloat(index) * 5, y: CGFloat(index) * 2) // 轻微偏移
+                    }
+                }
+                .frame(height: 120)
+                .padding(.top, 16)
+            )
         }
-        .frame(height: 120)
-        .padding(.top, 16)
-        .onTapGesture {
-            viewModel.expand()
-        }
+        .frame(height: 136)
     }
 
     private func thumbnailCard(for item: ShelfItem) -> some View {

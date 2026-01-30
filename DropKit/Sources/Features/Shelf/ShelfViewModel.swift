@@ -60,6 +60,14 @@ class ShelfViewModel {
         }
     }
 
+    func removeItems(byUrls urls: [URL]) {
+        let urlSet = Set(urls)
+        items.removeAll { urlSet.contains($0.url) }
+        if items.isEmpty {
+            viewState = .collapsed
+        }
+    }
+
     func removeItem(at index: Int) {
         guard items.indices.contains(index) else { return }
         items.remove(at: index)
