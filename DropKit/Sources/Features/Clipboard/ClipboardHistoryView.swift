@@ -1,4 +1,5 @@
 import SwiftUI
+import AppKit
 
 struct ClipboardHistoryView: View {
     var monitor: ClipboardMonitor
@@ -12,14 +13,19 @@ struct ClipboardHistoryView: View {
     var body: some View {
         ZStack {
             VStack(spacing: 0) {
-                // 标题栏 + 搜索框
+                // 拖动把手区域
+                WindowDragArea()
+                    .frame(height: 12)
+
+                // 搜索框
                 headerView
 
                 Divider()
                     .opacity(0.5)
 
-                // 筛选器
+                // 筛选器（也可拖动）
                 filterBar
+                    .background(WindowDragArea())
 
                 Divider()
                     .opacity(0.5)
@@ -118,15 +124,14 @@ struct ClipboardHistoryView: View {
     // MARK: - Filter Bar
 
     private var filterBar: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: 8) {
-                ForEach(ClipboardFilterType.allCases, id: \.self) { filter in
-                    filterButton(for: filter)
-                }
+        HStack(spacing: 8) {
+            ForEach(ClipboardFilterType.allCases, id: \.self) { filter in
+                filterButton(for: filter)
             }
-            .padding(.horizontal, 16)
-            .padding(.vertical, 8)
+            Spacer()
         }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 8)
     }
 
     private func filterButton(for filter: ClipboardFilterType) -> some View {
@@ -265,7 +270,7 @@ struct ClipboardHistoryView: View {
 
                 ScrollView {
                     previewContent(for: item)
-                        .padding(10)
+                        .padding(16)
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .background(Color.primary.opacity(0.03))
                         .clipShape(RoundedRectangle(cornerRadius: 8))
@@ -300,9 +305,6 @@ struct ClipboardHistoryView: View {
                 .textSelection(.enabled)
         case .file:
             VStack(alignment: .leading, spacing: 8) {
-                Image(systemName: "doc.fill")
-                    .font(.system(size: 32))
-                    .foregroundStyle(.secondary)
                 Text(URL(fileURLWithPath: item.content).lastPathComponent)
                     .font(.system(size: 14, weight: .medium))
                 Text(item.content)
@@ -433,7 +435,27 @@ struct ClipboardItemRow: View {
         }
         .onTapGesture {
             onSelect()
-            onCopy()
         }
+    }
+}
+
+// MARK: - Window Drag Area
+
+struct WindowDragArea: NSViewRepresentable {
+    func makeNSView(context: Context) -> NSView {
+        let view = WindowDragView()
+        return view
+    }
+
+    func updateNSView(_ nsView: NSView, context: Context) {}
+}
+
+class WindowDragView: NSView {
+    override func mouseDown(with event: NSEvent) {
+        window?.performDrag(with: event)
+    }
+
+    override func mouseDragged(with event: NSEvent) {
+        window?.performDrag(with: event)
     }
 }
