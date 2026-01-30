@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		2181271BAFC16D9EA4EEB26F /* ShakeDetector.swift in Sources */ = {isa = PBXBuildFile; fileRef = D122D4B3DB99ACD2A0EAB3E7 /* ShakeDetector.swift */; };
 		4178A03FE0566562722ED8DF /* ShelfDropView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F60C94C7AFA978E8C515594E /* ShelfDropView.swift */; };
 		47B6B61BA7B8F30ABFAC3C3E /* ShelfViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 235512566F31B0C278F0426F /* ShelfViewModel.swift */; };
 		7CF8080589D6B8D09CA7B494 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 984A94B1DD1567F47CCB76A7 /* AppDelegate.swift */; };
@@ -14,6 +15,7 @@
 		95C0F18E768C69FA5147ECF3 /* ShelfItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44FDD7106C941C838847EC7A /* ShelfItem.swift */; };
 		B1E9E1FC8D757F98DC7C7B87 /* DropKitApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5EEC229DE839084ADB696709 /* DropKitApp.swift */; };
 		C08FD2F76FA34B05F411E72B /* ShelfPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = F00441888AE62FF9BB4E0B6B /* ShelfPanel.swift */; };
+		C0C79249225A62921C5D84E8 /* DragMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = A519ACF998BC7304C7A58983 /* DragMonitor.swift */; };
 		D0A8D5038B0477210ED0046A /* DropKitTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7004D6682C39FC89EB7148B /* DropKitTests.swift */; };
 		FA4D571EB5406BA943E4742D /* AppState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27E1BD61D5A812E68EC0A3F3 /* AppState.swift */; };
 /* End PBXBuildFile section */
@@ -37,8 +39,10 @@
 		65068F7956E17086F9DE05F1 /* DropKit.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = DropKit.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		984A94B1DD1567F47CCB76A7 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		9EDA4B4D81A0ED80CA247906 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		A519ACF998BC7304C7A58983 /* DragMonitor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DragMonitor.swift; sourceTree = "<group>"; };
 		A7004D6682C39FC89EB7148B /* DropKitTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DropKitTests.swift; sourceTree = "<group>"; };
 		C44A4C24A904E0FC70DFC2C2 /* ShelfView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShelfView.swift; sourceTree = "<group>"; };
+		D122D4B3DB99ACD2A0EAB3E7 /* ShakeDetector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShakeDetector.swift; sourceTree = "<group>"; };
 		E251CAA34023A49B39C6440A /* DropKit.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = DropKit.entitlements; sourceTree = "<group>"; };
 		F00441888AE62FF9BB4E0B6B /* ShelfPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShelfPanel.swift; sourceTree = "<group>"; };
 		F60C94C7AFA978E8C515594E /* ShelfDropView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShelfDropView.swift; sourceTree = "<group>"; };
@@ -74,6 +78,7 @@
 				9EDA4B4D81A0ED80CA247906 /* Info.plist */,
 				1A4DFADDC3CC8F580B6F13F9 /* App */,
 				7B599B1F7692E031A9C27F42 /* Features */,
+				FDECD4D9217645A2BB4F6F25 /* Services */,
 				DB4E0E9AE917BF0DD477C9C5 /* Utilities */,
 			);
 			path = Sources;
@@ -118,6 +123,15 @@
 			children = (
 			);
 			path = Utilities;
+			sourceTree = "<group>";
+		};
+		FDECD4D9217645A2BB4F6F25 /* Services */ = {
+			isa = PBXGroup;
+			children = (
+				A519ACF998BC7304C7A58983 /* DragMonitor.swift */,
+				D122D4B3DB99ACD2A0EAB3E7 /* ShakeDetector.swift */,
+			);
+			path = Services;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -207,7 +221,9 @@
 			files = (
 				7CF8080589D6B8D09CA7B494 /* AppDelegate.swift in Sources */,
 				FA4D571EB5406BA943E4742D /* AppState.swift in Sources */,
+				C0C79249225A62921C5D84E8 /* DragMonitor.swift in Sources */,
 				B1E9E1FC8D757F98DC7C7B87 /* DropKitApp.swift in Sources */,
+				2181271BAFC16D9EA4EEB26F /* ShakeDetector.swift in Sources */,
 				4178A03FE0566562722ED8DF /* ShelfDropView.swift in Sources */,
 				95C0F18E768C69FA5147ECF3 /* ShelfItem.swift in Sources */,
 				C08FD2F76FA34B05F411E72B /* ShelfPanel.swift in Sources */,
