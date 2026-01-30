@@ -56,7 +56,7 @@ struct CollapsedShelfView: View {
                     Button {
                         viewModel.expand()
                     } label: {
-                        Image(systemName: "chevron.down")
+                        Image(systemName: "chevron.right")
                             .font(.system(size: 12, weight: .medium))
                             .foregroundStyle(.secondary)
                             .frame(width: 28, height: 28)
@@ -95,11 +95,11 @@ struct CollapsedShelfView: View {
 
     private var stackedThumbnailsView: some View {
         ZStack {
-            // 堆叠效果
+            // 扑克牌散开效果：轻微倾斜偏移
             ForEach(Array(viewModel.items.prefix(3).enumerated().reversed()), id: \.element.id) { index, item in
                 thumbnailCard(for: item)
-                    .offset(x: CGFloat(index) * 4, y: CGFloat(index) * 4)
-                    .scaleEffect(1.0 - CGFloat(index) * 0.05)
+                    .rotationEffect(.degrees(Double(index) * -3)) // 轻微倾斜
+                    .offset(x: CGFloat(index) * 5, y: CGFloat(index) * 2) // 轻微偏移
             }
         }
         .frame(height: 120)

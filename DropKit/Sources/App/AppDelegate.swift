@@ -11,12 +11,17 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     let settingsWindowController = SettingsWindowController()
 
     func applicationDidFinishLaunching(_ notification: Notification) {
-        // 检查辅助功能权限
+        #if DEBUG
+        // 开发模式：跳过权限检查，直接启动
+        setupApp()
+        #else
+        // 正式发布：检查辅助功能权限
         if PermissionChecker.checkAccessibilityPermission() {
             setupApp()
         } else {
             showPermissionGuide()
         }
+        #endif
     }
 
     private func setupApp() {

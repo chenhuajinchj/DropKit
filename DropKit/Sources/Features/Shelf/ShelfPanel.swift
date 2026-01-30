@@ -1,19 +1,22 @@
 import AppKit
 import SwiftUI
+import Combine
 
 class ShelfPanel: NSPanel {
     let viewModel = ShelfViewModel()
     private var clickMonitor: Any?
+    private var cancellables = Set<AnyCancellable>()
 
     init() {
         super.init(
-            contentRect: NSRect(x: 0, y: 0, width: 180, height: 220),
+            contentRect: NSRect(x: 0, y: 0, width: 200, height: 200),
             styleMask: [.borderless, .nonactivatingPanel],
             backing: .buffered,
             defer: false
         )
 
         setupPanel()
+        observeViewState()
     }
 
     private func setupPanel() {
@@ -31,7 +34,7 @@ class ShelfPanel: NSPanel {
         hidesOnDeactivate = false
 
         // 使用自定义 dropView 作为 contentView
-        let dropView = ShelfDropView(frame: NSRect(x: 0, y: 0, width: 180, height: 220))
+        let dropView = ShelfDropView(frame: NSRect(x: 0, y: 0, width: 200, height: 200))
         dropView.onDrop = { [weak self] urls in
             self?.viewModel.addItems(urls: urls)
         }
@@ -73,6 +76,60 @@ class ShelfPanel: NSPanel {
 
         // 居中显示
         center()
+    }
+
+    // MARK: - Dynamic Size
+
+    private func observeViewState() {
+        // 使用 withObservationTracking 监听 viewModel 变化
+        Task { @MainActor in
+            while !Task.isCancelled {
+                let currentState = viewModel.viewState
+                let hasItems = !viewModel.items.isEmpty
+
+                withObservationTracking {
+                    _ = viewModel.viewState
+                    _ = viewModel.items.count
+                } onChange: {
+                    Task { @MainActor in
+                        self.updatePanelSize()
+                    }
+                }
+
+                // 初始更新
+                updatePanelSize()
+
+                // 等待变化
+                try? await Task.sleep(nanoseconds: 100_000_000) // 0.1s
+            }
+        }
+    }
+
+    private func updatePanelSize() {
+        let newSize: NSSize
+
+        switch viewModel.viewState {
+        case .collapsed:
+            newSize = viewModel.items.isEmpty ? NSSize(width: 200, height: 200) : NSSize(width: 200, height: 240)
+        case .expanded:
+            newSize = NSSize(width: 400, height: 300)
+        }
+
+        // 只有尺寸变化时才更新
+        guard frame.size != newSize else { return }
+
+        // 保持窗口中心位置
+        let currentCenter = NSPoint(x: frame.midX, y: frame.midY)
+        let newOrigin = NSPoint(
+            x: currentCenter.x - newSize.width / 2,
+            y: currentCenter.y - newSize.height / 2
+        )
+
+        NSAnimationContext.runAnimationGroup { context in
+            context.duration = 0.2
+            context.timingFunction = CAMediaTimingFunction(name: .easeInEaseOut)
+            self.animator().setFrame(NSRect(origin: newOrigin, size: newSize), display: true)
+        }
     }
 
     // 允许成为 key window（接收键盘事件）
