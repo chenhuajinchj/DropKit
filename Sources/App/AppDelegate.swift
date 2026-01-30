@@ -4,6 +4,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     var shelfPanel: ShelfPanel?
     let dragMonitor = DragMonitor()
     let shakeDetector = ShakeDetector()
+    let menuBarController = MenuBarController()
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         print("DropKit launched")
@@ -12,6 +13,24 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         shelfPanel = ShelfPanel()
 
         setupDragAndShake()
+        setupMenuBar()
+    }
+
+    private func setupMenuBar() {
+        menuBarController.onShowShelf = { [weak self] in
+            self?.shelfPanel?.center()
+            self?.shelfPanel?.orderFront(nil)
+        }
+
+        menuBarController.onShowSettings = {
+            NSApp.sendAction(Selector(("showSettingsWindow:")), to: nil, from: nil)
+        }
+
+        menuBarController.onQuit = {
+            NSApp.terminate(nil)
+        }
+
+        menuBarController.setup()
     }
 
     private func setupDragAndShake() {
