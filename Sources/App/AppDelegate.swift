@@ -2,8 +2,10 @@ import AppKit
 
 class AppDelegate: NSObject, NSApplicationDelegate {
     var shelfPanel: ShelfPanel?
+    var clipboardHistoryPanel: ClipboardHistoryPanel?
     let dragMonitor = DragMonitor()
     let shakeDetector = ShakeDetector()
+    let clipboardMonitor = ClipboardMonitor()
     let menuBarController = MenuBarController()
 
     func applicationDidFinishLaunching(_ notification: Notification) {
@@ -11,6 +13,12 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
         // 创建悬浮窗（默认隐藏）
         shelfPanel = ShelfPanel()
+
+        // 创建剪切板历史面板
+        clipboardHistoryPanel = ClipboardHistoryPanel(monitor: clipboardMonitor)
+
+        // 启动剪切板监听
+        clipboardMonitor.start()
 
         setupDragAndShake()
         setupMenuBar()
@@ -20,6 +28,10 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         menuBarController.onShowShelf = { [weak self] in
             self?.shelfPanel?.center()
             self?.shelfPanel?.showPanel()
+        }
+
+        menuBarController.onShowClipboardHistory = { [weak self] in
+            self?.clipboardHistoryPanel?.showPanel()
         }
 
         menuBarController.onShowSettings = {
@@ -92,6 +104,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationWillTerminate(_ notification: Notification) {
         dragMonitor.stop()
         shakeDetector.stop()
+        clipboardMonitor.stop()
         print("DropKit terminating")
     }
 }

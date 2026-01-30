@@ -4,6 +4,7 @@ class MenuBarController {
     private var statusItem: NSStatusItem?
 
     var onShowShelf: (() -> Void)?
+    var onShowClipboardHistory: (() -> Void)?
     var onShowSettings: (() -> Void)?
     var onQuit: (() -> Void)?
 
@@ -25,6 +26,12 @@ class MenuBarController {
         showShelfItem.keyEquivalentModifierMask = [.command, .shift]
         showShelfItem.target = self
         menu.addItem(showShelfItem)
+
+        // 剪切板历史
+        let clipboardItem = NSMenuItem(title: "剪切板历史", action: #selector(showClipboardHistory), keyEquivalent: "v")
+        clipboardItem.keyEquivalentModifierMask = [.command, .shift]
+        clipboardItem.target = self
+        menu.addItem(clipboardItem)
 
         menu.addItem(NSMenuItem.separator())
 
@@ -50,6 +57,10 @@ class MenuBarController {
 
     @objc private func showShelf() {
         onShowShelf?()
+    }
+
+    @objc private func showClipboardHistory() {
+        onShowClipboardHistory?()
     }
 
     @objc private func showSettings() {
