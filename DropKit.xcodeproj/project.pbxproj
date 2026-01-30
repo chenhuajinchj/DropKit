@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		7CF8080589D6B8D09CA7B494 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 984A94B1DD1567F47CCB76A7 /* AppDelegate.swift */; };
 		B1E9E1FC8D757F98DC7C7B87 /* DropKitApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5EEC229DE839084ADB696709 /* DropKitApp.swift */; };
+		C08FD2F76FA34B05F411E72B /* ShelfPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = F00441888AE62FF9BB4E0B6B /* ShelfPanel.swift */; };
 		D0A8D5038B0477210ED0046A /* DropKitTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7004D6682C39FC89EB7148B /* DropKitTests.swift */; };
 		FA4D571EB5406BA943E4742D /* AppState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27E1BD61D5A812E68EC0A3F3 /* AppState.swift */; };
 /* End PBXBuildFile section */
@@ -32,6 +33,7 @@
 		9EDA4B4D81A0ED80CA247906 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		A7004D6682C39FC89EB7148B /* DropKitTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DropKitTests.swift; sourceTree = "<group>"; };
 		E251CAA34023A49B39C6440A /* DropKit.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = DropKit.entitlements; sourceTree = "<group>"; };
+		F00441888AE62FF9BB4E0B6B /* ShelfPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShelfPanel.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXGroup section */
@@ -43,6 +45,14 @@
 				5EEC229DE839084ADB696709 /* DropKitApp.swift */,
 			);
 			path = App;
+			sourceTree = "<group>";
+		};
+		22BDFAE86355F9473C343000 /* Shelf */ = {
+			isa = PBXGroup;
+			children = (
+				F00441888AE62FF9BB4E0B6B /* ShelfPanel.swift */,
+			);
+			path = Shelf;
 			sourceTree = "<group>";
 		};
 		3DBBB908C3E3255B3EE0FEF8 /* Sources */ = {
@@ -69,6 +79,7 @@
 		7B599B1F7692E031A9C27F42 /* Features */ = {
 			isa = PBXGroup;
 			children = (
+				22BDFAE86355F9473C343000 /* Shelf */,
 			);
 			path = Features;
 			sourceTree = "<group>";
@@ -185,6 +196,7 @@
 				7CF8080589D6B8D09CA7B494 /* AppDelegate.swift in Sources */,
 				FA4D571EB5406BA943E4742D /* AppState.swift in Sources */,
 				B1E9E1FC8D757F98DC7C7B87 /* DropKitApp.swift in Sources */,
+				C08FD2F76FA34B05F411E72B /* ShelfPanel.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

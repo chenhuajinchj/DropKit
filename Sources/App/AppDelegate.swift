@@ -1,9 +1,14 @@
 import AppKit
 
 class AppDelegate: NSObject, NSApplicationDelegate {
+    var shelfPanel: ShelfPanel?
+
     func applicationDidFinishLaunching(_ notification: Notification) {
-        // App initialization
         print("DropKit launched")
+
+        // 创建悬浮窗
+        shelfPanel = ShelfPanel()
+        shelfPanel?.orderFront(nil)
     }
 
     func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
