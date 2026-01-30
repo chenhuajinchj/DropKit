@@ -1,7 +1,20 @@
 import SwiftUI
 
 struct ShelfView: View {
+    var viewModel: ShelfViewModel
+
     var body: some View {
+        Group {
+            if viewModel.items.isEmpty {
+                emptyStateView
+            } else {
+                itemsListView
+            }
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+
+    private var emptyStateView: some View {
         VStack(spacing: 16) {
             Spacer()
 
@@ -15,12 +28,33 @@ struct ShelfView: View {
 
             Spacer()
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+
+    private var itemsListView: some View {
+        ScrollView {
+            LazyVStack(spacing: 8) {
+                ForEach(viewModel.items) { item in
+                    HStack {
+                        Image(systemName: "doc.fill")
+                            .foregroundStyle(.secondary)
+                        Text(item.name)
+                            .lineLimit(1)
+                            .truncationMode(.middle)
+                        Spacer()
+                    }
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 8)
+                    .background(.regularMaterial)
+                    .clipShape(RoundedRectangle(cornerRadius: 8))
+                }
+            }
+            .padding(12)
+        }
     }
 }
 
 #Preview {
-    ShelfView()
-        .frame(width: 300, height: 400)
+    ShelfView(viewModel: ShelfViewModel())
+        .frame(width: 180, height: 220)
         .background(.regularMaterial)
 }

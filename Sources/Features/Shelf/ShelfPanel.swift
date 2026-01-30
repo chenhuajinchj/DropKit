@@ -2,6 +2,7 @@ import AppKit
 import SwiftUI
 
 class ShelfPanel: NSPanel {
+    let viewModel = ShelfViewModel()
 
     init() {
         super.init(
@@ -28,6 +29,13 @@ class ShelfPanel: NSPanel {
         // 不显示在 Dock 和 App Switcher
         hidesOnDeactivate = false
 
+        // 使用自定义 dropView 作为 contentView
+        let dropView = ShelfDropView(frame: NSRect(x: 0, y: 0, width: 180, height: 220))
+        dropView.onDrop = { [weak self] urls in
+            self?.viewModel.addItems(urls: urls)
+        }
+        contentView = dropView
+
         // 添加毛玻璃背景视图
         let visualEffect = NSVisualEffectView()
         visualEffect.translatesAutoresizingMaskIntoConstraints = false
@@ -38,20 +46,18 @@ class ShelfPanel: NSPanel {
         visualEffect.layer?.cornerRadius = 12
         visualEffect.layer?.masksToBounds = true
 
-        contentView?.addSubview(visualEffect)
+        dropView.addSubview(visualEffect)
 
-        // visualEffect 约束到 contentView
-        if let contentView = contentView {
-            NSLayoutConstraint.activate([
-                visualEffect.topAnchor.constraint(equalTo: contentView.topAnchor),
-                visualEffect.bottomAnchor.constraint(equalTo: contentView.bottomAnchor),
-                visualEffect.leadingAnchor.constraint(equalTo: contentView.leadingAnchor),
-                visualEffect.trailingAnchor.constraint(equalTo: contentView.trailingAnchor)
-            ])
-        }
+        // visualEffect 约束到 dropView
+        NSLayoutConstraint.activate([
+            visualEffect.topAnchor.constraint(equalTo: dropView.topAnchor),
+            visualEffect.bottomAnchor.constraint(equalTo: dropView.bottomAnchor),
+            visualEffect.leadingAnchor.constraint(equalTo: dropView.leadingAnchor),
+            visualEffect.trailingAnchor.constraint(equalTo: dropView.trailingAnchor)
+        ])
 
         // 嵌入 SwiftUI 视图到毛玻璃视图内部
-        let hostingView = NSHostingView(rootView: ShelfView())
+        let hostingView = NSHostingView(rootView: ShelfView(viewModel: viewModel))
         hostingView.translatesAutoresizingMaskIntoConstraints = false
         visualEffect.addSubview(hostingView)
 

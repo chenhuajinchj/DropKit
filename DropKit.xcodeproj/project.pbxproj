@@ -7,8 +7,11 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		4178A03FE0566562722ED8DF /* ShelfDropView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F60C94C7AFA978E8C515594E /* ShelfDropView.swift */; };
+		47B6B61BA7B8F30ABFAC3C3E /* ShelfViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 235512566F31B0C278F0426F /* ShelfViewModel.swift */; };
 		7CF8080589D6B8D09CA7B494 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 984A94B1DD1567F47CCB76A7 /* AppDelegate.swift */; };
 		8E137FA90409E7D2EE6D143D /* ShelfView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C44A4C24A904E0FC70DFC2C2 /* ShelfView.swift */; };
+		95C0F18E768C69FA5147ECF3 /* ShelfItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44FDD7106C941C838847EC7A /* ShelfItem.swift */; };
 		B1E9E1FC8D757F98DC7C7B87 /* DropKitApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5EEC229DE839084ADB696709 /* DropKitApp.swift */; };
 		C08FD2F76FA34B05F411E72B /* ShelfPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = F00441888AE62FF9BB4E0B6B /* ShelfPanel.swift */; };
 		D0A8D5038B0477210ED0046A /* DropKitTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7004D6682C39FC89EB7148B /* DropKitTests.swift */; };
@@ -27,7 +30,9 @@
 
 /* Begin PBXFileReference section */
 		171699667EEE7CF874460560 /* DropKitTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = DropKitTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		235512566F31B0C278F0426F /* ShelfViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShelfViewModel.swift; sourceTree = "<group>"; };
 		27E1BD61D5A812E68EC0A3F3 /* AppState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppState.swift; sourceTree = "<group>"; };
+		44FDD7106C941C838847EC7A /* ShelfItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShelfItem.swift; sourceTree = "<group>"; };
 		5EEC229DE839084ADB696709 /* DropKitApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DropKitApp.swift; sourceTree = "<group>"; };
 		65068F7956E17086F9DE05F1 /* DropKit.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = DropKit.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		984A94B1DD1567F47CCB76A7 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
@@ -36,6 +41,7 @@
 		C44A4C24A904E0FC70DFC2C2 /* ShelfView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShelfView.swift; sourceTree = "<group>"; };
 		E251CAA34023A49B39C6440A /* DropKit.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = DropKit.entitlements; sourceTree = "<group>"; };
 		F00441888AE62FF9BB4E0B6B /* ShelfPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShelfPanel.swift; sourceTree = "<group>"; };
+		F60C94C7AFA978E8C515594E /* ShelfDropView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShelfDropView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXGroup section */
@@ -52,8 +58,11 @@
 		22BDFAE86355F9473C343000 /* Shelf */ = {
 			isa = PBXGroup;
 			children = (
+				F60C94C7AFA978E8C515594E /* ShelfDropView.swift */,
+				44FDD7106C941C838847EC7A /* ShelfItem.swift */,
 				F00441888AE62FF9BB4E0B6B /* ShelfPanel.swift */,
 				C44A4C24A904E0FC70DFC2C2 /* ShelfView.swift */,
+				235512566F31B0C278F0426F /* ShelfViewModel.swift */,
 			);
 			path = Shelf;
 			sourceTree = "<group>";
@@ -199,8 +208,11 @@
 				7CF8080589D6B8D09CA7B494 /* AppDelegate.swift in Sources */,
 				FA4D571EB5406BA943E4742D /* AppState.swift in Sources */,
 				B1E9E1FC8D757F98DC7C7B87 /* DropKitApp.swift in Sources */,
+				4178A03FE0566562722ED8DF /* ShelfDropView.swift in Sources */,
+				95C0F18E768C69FA5147ECF3 /* ShelfItem.swift in Sources */,
 				C08FD2F76FA34B05F411E72B /* ShelfPanel.swift in Sources */,
 				8E137FA90409E7D2EE6D143D /* ShelfView.swift in Sources */,
+				47B6B61BA7B8F30ABFAC3C3E /* ShelfViewModel.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
