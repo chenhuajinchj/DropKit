@@ -20,9 +20,25 @@ class ShelfViewModel {
     // MARK: - Item Management
 
     func addItem(url: URL) {
-        // 检查是否已存在相同文件（通过路径判断）
-        if items.contains(where: { $0.url == url }) {
-            return
+        // 检查是否是 SwiftUI 拖拽产生的临时文件
+        let isSwiftUIDragCache = url.path.contains("com.apple.SwiftUI.Drag")
+
+        if isSwiftUIDragCache {
+            // 临时文件用文件名比较（因为是复制的文件，fileID 不同）
+            let fileName = url.lastPathComponent
+            if items.contains(where: { $0.name == fileName }) {
+                return
+            }
+        } else {
+            // 正常文件用 fileResourceIdentifier 比较
+            if let newFileID = try? url.resourceValues(forKeys: [.fileResourceIdentifierKey]).fileResourceIdentifier {
+                for existingItem in items {
+                    if let existingFileID = try? existingItem.url.resourceValues(forKeys: [.fileResourceIdentifierKey]).fileResourceIdentifier,
+                       existingFileID.isEqual(newFileID) {
+                        return
+                    }
+                }
+            }
         }
 
         var item = ShelfItem(url: url)

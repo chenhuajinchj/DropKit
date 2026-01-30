@@ -6,6 +6,7 @@ class ShelfPanel: NSPanel {
     let viewModel = ShelfViewModel()
     private var clickMonitor: Any?
     private var cancellables = Set<AnyCancellable>()
+    private var isDocked = false
 
     init() {
         super.init(
@@ -62,7 +63,7 @@ class ShelfPanel: NSPanel {
 
         // 嵌入 SwiftUI 视图到毛玻璃视图内部
         let hostingView = NSHostingView(rootView: ShelfView(viewModel: viewModel, onClose: { [weak self] in
-            self?.hidePanel()
+            self?.closeAndClear()
         }))
         hostingView.translatesAutoresizingMaskIntoConstraints = false
         visualEffect.addSubview(hostingView)
@@ -83,21 +84,26 @@ class ShelfPanel: NSPanel {
     private func observeViewState() {
         // 使用 withObservationTracking 监听 viewModel 变化
         Task { @MainActor in
-            while !Task.isCancelled {
-                let currentState = viewModel.viewState
-                let hasItems = !viewModel.items.isEmpty
+            var previousItemCount = viewModel.items.count
 
+            while !Task.isCancelled {
                 withObservationTracking {
                     _ = viewModel.viewState
                     _ = viewModel.items.count
                 } onChange: {
                     Task { @MainActor in
                         self.updatePanelSize()
+
+                        // 文件全部拖出后自动关闭
+                        if self.viewModel.items.isEmpty && self.isVisible {
+                            self.hidePanel()
+                        }
                     }
                 }
 
                 // 初始更新
                 updatePanelSize()
+                previousItemCount = viewModel.items.count
 
                 // 等待变化
                 try? await Task.sleep(nanoseconds: 100_000_000) // 0.1s
@@ -141,6 +147,7 @@ class ShelfPanel: NSPanel {
     // MARK: - Show/Hide
 
     func showPanel() {
+        isDocked = false
         orderFront(nil)
         startClickMonitor()
     }
@@ -148,6 +155,12 @@ class ShelfPanel: NSPanel {
     func hidePanel() {
         stopClickMonitor()
         orderOut(nil)
+    }
+
+    /// 点击 X 按钮：清空内容 + 关闭窗口
+    func closeAndClear() {
+        viewModel.clearAll()
+        hidePanel()
     }
 
     private func startClickMonitor() {
@@ -158,12 +171,48 @@ class ShelfPanel: NSPanel {
 
             // 检查点击是否在窗口外部
             if !self.frame.contains(screenLocation) {
-                // 只有悬浮窗为空时才关闭
                 if self.viewModel.items.isEmpty {
+                    // 悬浮窗为空时关闭
                     self.hidePanel()
+                } else if !self.isDocked {
+                    // 有内容且未停靠时，停靠到边缘
+                    self.dockToEdge()
                 }
             }
         }
+    }
+
+    // MARK: - Docking
+
+    /// 根据窗口位置智能停靠到屏幕边缘
+    private func dockToEdge() {
+        guard let screen = self.screen ?? NSScreen.main else { return }
+
+        let screenFrame = screen.visibleFrame
+        let windowCenter = frame.midX
+
+        // 判断窗口在屏幕左半边还是右半边
+        let screenCenter = screenFrame.midX
+        let dockToLeft = windowCenter < screenCenter
+
+        // 计算目标位置（保持 Y 坐标不变）
+        let targetX: CGFloat
+        if dockToLeft {
+            targetX = screenFrame.minX
+        } else {
+            targetX = screenFrame.maxX - frame.width
+        }
+
+        let targetOrigin = NSPoint(x: targetX, y: frame.origin.y)
+
+        // 用动画滑动到边缘
+        NSAnimationContext.runAnimationGroup { context in
+            context.duration = 0.25
+            context.timingFunction = CAMediaTimingFunction(name: .easeOut)
+            self.animator().setFrameOrigin(targetOrigin)
+        }
+
+        isDocked = true
     }
 
     private func stopClickMonitor() {
