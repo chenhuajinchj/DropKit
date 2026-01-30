@@ -12,6 +12,17 @@ class ClipboardMonitor {
         AppSettings.shared.clipboardMaxItems
     }
 
+    private var storageURL: URL {
+        let appSupport = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
+        let dropkitDir = appSupport.appendingPathComponent("DropKit", isDirectory: true)
+        try? FileManager.default.createDirectory(at: dropkitDir, withIntermediateDirectories: true)
+        return dropkitDir.appendingPathComponent("clipboard_history.json")
+    }
+
+    init() {
+        loadItems()
+    }
+
     func start() {
         lastChangeCount = NSPasteboard.general.changeCount
         timer = Timer.scheduledTimer(withTimeInterval: 0.5, repeats: true) { [weak self] _ in
@@ -80,6 +91,8 @@ class ClipboardMonitor {
         if items.count > effectiveMaxItems {
             items = Array(items.prefix(effectiveMaxItems))
         }
+
+        saveItems()
     }
 
     func copyToClipboard(_ item: ClipboardItem) {
@@ -104,10 +117,33 @@ class ClipboardMonitor {
 
     func removeItem(_ item: ClipboardItem) {
         items.removeAll { $0.id == item.id }
+        saveItems()
     }
 
     func clearAll() {
         items.removeAll()
+        saveItems()
+    }
+
+    // MARK: - Persistence
+
+    private func loadItems() {
+        guard FileManager.default.fileExists(atPath: storageURL.path) else { return }
+        do {
+            let data = try Data(contentsOf: storageURL)
+            items = try JSONDecoder().decode([ClipboardItem].self, from: data)
+        } catch {
+            print("Failed to load clipboard history: \(error)")
+        }
+    }
+
+    private func saveItems() {
+        do {
+            let data = try JSONEncoder().encode(items)
+            try data.write(to: storageURL)
+        } catch {
+            print("Failed to save clipboard history: \(error)")
+        }
     }
 
     deinit {

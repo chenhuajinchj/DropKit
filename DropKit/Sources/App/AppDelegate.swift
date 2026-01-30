@@ -3,6 +3,7 @@ import AppKit
 class AppDelegate: NSObject, NSApplicationDelegate {
     var shelfPanel: ShelfPanel?
     var clipboardHistoryPanel: ClipboardHistoryPanel?
+    var permissionGuideWindow: PermissionGuideWindow?
     let dragMonitor = DragMonitor()
     let shakeDetector = ShakeDetector()
     let clipboardMonitor = ClipboardMonitor()
@@ -10,6 +11,15 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     let settingsWindowController = SettingsWindowController()
 
     func applicationDidFinishLaunching(_ notification: Notification) {
+        // 检查辅助功能权限
+        if PermissionChecker.checkAccessibilityPermission() {
+            setupApp()
+        } else {
+            showPermissionGuide()
+        }
+    }
+
+    private func setupApp() {
         // 创建悬浮窗（默认隐藏）
         shelfPanel = ShelfPanel()
 
@@ -21,6 +31,15 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
         setupDragAndShake()
         setupMenuBar()
+    }
+
+    private func showPermissionGuide() {
+        permissionGuideWindow = PermissionGuideWindow()
+        permissionGuideWindow?.onPermissionGranted = { [weak self] in
+            self?.permissionGuideWindow = nil
+            self?.setupApp()
+        }
+        permissionGuideWindow?.showWindow()
     }
 
     private func setupMenuBar() {

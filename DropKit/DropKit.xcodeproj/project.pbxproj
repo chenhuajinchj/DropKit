@@ -7,6 +7,9 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		1A1A1A1A1A1A1A1A1A1A1A1A /* PermissionChecker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1B1B1B1B1B1B1B1B1B1B1B1B /* PermissionChecker.swift */; };
+		1C1C1C1C1C1C1C1C1C1C1C1C /* PermissionGuideView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D1D1D1D1D1D1D1D1D1D1D1D /* PermissionGuideView.swift */; };
+		1E1E1E1E1E1E1E1E1E1E1E1E /* PermissionGuideWindow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F1F1F1F1F1F1F1F1F1F1F1F /* PermissionGuideWindow.swift */; };
 		2181271BAFC16D9EA4EEB26F /* ShakeDetector.swift in Sources */ = {isa = PBXBuildFile; fileRef = D122D4B3DB99ACD2A0EAB3E7 /* ShakeDetector.swift */; };
 		3FBD74030017DAF23086F0A5 /* AppSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 93236182EE82152F26D6A646 /* AppSettings.swift */; };
 		4178A03FE0566562722ED8DF /* ShelfDropView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F60C94C7AFA978E8C515594E /* ShelfDropView.swift */; };
@@ -41,6 +44,9 @@
 /* Begin PBXFileReference section */
 		171699667EEE7CF874460560 /* DropKitTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = DropKitTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		17692C8058CA4C2A1B8560CB /* ClipboardMonitor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClipboardMonitor.swift; sourceTree = "<group>"; };
+		1B1B1B1B1B1B1B1B1B1B1B1B /* PermissionChecker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PermissionChecker.swift; sourceTree = "<group>"; };
+		1D1D1D1D1D1D1D1D1D1D1D1D /* PermissionGuideView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PermissionGuideView.swift; sourceTree = "<group>"; };
+		1F1F1F1F1F1F1F1F1F1F1F1F /* PermissionGuideWindow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PermissionGuideWindow.swift; sourceTree = "<group>"; };
 		20CA3956C671F8B5C1FD7E7A /* ClipboardItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClipboardItem.swift; sourceTree = "<group>"; };
 		235512566F31B0C278F0426F /* ShelfViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShelfViewModel.swift; sourceTree = "<group>"; };
 		27E1BD61D5A812E68EC0A3F3 /* AppState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppState.swift; sourceTree = "<group>"; };
@@ -141,6 +147,7 @@
 			children = (
 				37CB26508878D7AF0CC50605 /* Clipboard */,
 				3F2054B63A2CE711E38C0343 /* MenuBar */,
+				2A2A2A2A2A2A2A2A2A2A2A2A /* Permission */,
 				F31F88A7E324E942C58DC30F /* Settings */,
 				22BDFAE86355F9473C343000 /* Shelf */,
 			);
@@ -167,8 +174,18 @@
 		DB4E0E9AE917BF0DD477C9C5 /* Utilities */ = {
 			isa = PBXGroup;
 			children = (
+				1B1B1B1B1B1B1B1B1B1B1B1B /* PermissionChecker.swift */,
 			);
 			path = Utilities;
+			sourceTree = "<group>";
+		};
+		2A2A2A2A2A2A2A2A2A2A2A2A /* Permission */ = {
+			isa = PBXGroup;
+			children = (
+				1D1D1D1D1D1D1D1D1D1D1D1D /* PermissionGuideView.swift */,
+				1F1F1F1F1F1F1F1F1F1F1F1F /* PermissionGuideWindow.swift */,
+			);
+			path = Permission;
 			sourceTree = "<group>";
 		};
 		F31F88A7E324E942C58DC30F /* Settings */ = {
@@ -285,6 +302,9 @@
 				C0C79249225A62921C5D84E8 /* DragMonitor.swift in Sources */,
 				B1E9E1FC8D757F98DC7C7B87 /* DropKitApp.swift in Sources */,
 				89FF5FA3B652E49B3193CB53 /* MenuBarController.swift in Sources */,
+				1A1A1A1A1A1A1A1A1A1A1A1A /* PermissionChecker.swift in Sources */,
+				1C1C1C1C1C1C1C1C1C1C1C1C /* PermissionGuideView.swift in Sources */,
+				1E1E1E1E1E1E1E1E1E1E1E1E /* PermissionGuideWindow.swift in Sources */,
 				A6DACED829B9422B472C0E8F /* SettingsView.swift in Sources */,
 				B6D3F0349E4ECF0EB74EE08A /* SettingsWindowController.swift in Sources */,
 				2181271BAFC16D9EA4EEB26F /* ShakeDetector.swift in Sources */,

@@ -209,6 +209,9 @@ DropKit/Sources/
 # 进入项目目录
 cd "/Users/chenhuajin/Desktop/Dropkit v2/DropKit"
 
+# ⚠️ 重要：编译前必须先清理旧进程
+pkill -f DropKit
+
 # 编译
 xcodebuild -scheme DropKit -configuration Debug build
 
@@ -217,11 +220,17 @@ xcodebuild -scheme DropKit -configuration Debug build
 
 ### 运行应用
 ```bash
-# 编译后的应用位置
-./build/Debug/DropKit.app/Contents/MacOS/DropKit
+# 编译后的应用位置（DerivedData）
+open /Users/chenhuajin/Library/Developer/Xcode/DerivedData/DropKit-bqmlcvlnjuylvzeagcwxbprezsdf/Build/Products/Debug/DropKit.app
 
-# 或直接打开
+# 或者本地 build 目录
 open ./build/Debug/DropKit.app
+```
+
+### 一键编译运行
+```bash
+# 清理旧进程 + 编译 + 运行
+pkill -f DropKit; cd "/Users/chenhuajin/Desktop/Dropkit v2/DropKit" && xcodebuild -scheme DropKit -configuration Debug build && open /Users/chenhuajin/Library/Developer/Xcode/DerivedData/DropKit-bqmlcvlnjuylvzeagcwxbprezsdf/Build/Products/Debug/DropKit.app
 ```
 
 ### 清理构建

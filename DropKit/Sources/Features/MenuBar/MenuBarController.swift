@@ -1,7 +1,9 @@
 import AppKit
+import Carbon.HIToolbox
 
 class MenuBarController {
     private var statusItem: NSStatusItem?
+    private var globalKeyMonitor: Any?
 
     var onShowShelf: (() -> Void)?
     var onShowClipboardHistory: (() -> Void)?
@@ -16,6 +18,7 @@ class MenuBarController {
         }
 
         setupMenu()
+        setupGlobalHotkeys()
     }
 
     private func setupMenu() {
@@ -73,5 +76,33 @@ class MenuBarController {
 
     @objc private func quit() {
         onQuit?()
+    }
+
+    // MARK: - Global Hotkeys
+
+    private func setupGlobalHotkeys() {
+        globalKeyMonitor = NSEvent.addGlobalMonitorForEvents(matching: .keyDown) { [weak self] event in
+            self?.handleGlobalKeyEvent(event)
+        }
+    }
+
+    private func handleGlobalKeyEvent(_ event: NSEvent) {
+        let modifiers = event.modifierFlags.intersection(.deviceIndependentFlagsMask)
+
+        // ⌘⇧S - 显示悬浮窗
+        if modifiers == [.command, .shift] && event.keyCode == UInt16(kVK_ANSI_S) {
+            onShowShelf?()
+        }
+
+        // ⌘⇧V - 剪切板历史
+        if modifiers == [.command, .shift] && event.keyCode == UInt16(kVK_ANSI_V) {
+            onShowClipboardHistory?()
+        }
+    }
+
+    deinit {
+        if let monitor = globalKeyMonitor {
+            NSEvent.removeMonitor(monitor)
+        }
     }
 }
