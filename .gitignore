@@ -1,33 +1,17 @@
-# Xcode
-build/
-*.xcodeproj/xcuserdata/
-*.xcodeproj/project.xcworkspace/xcuserdata/
-*.xcworkspace/xcuserdata/
-
-# Swift Package Manager
-.swiftpm/
-.build/
-
 # macOS
 .DS_Store
 .AppleDouble
 .LSOverride
 
-# Thumbnails
-._*
+# Xcode
+build/
+DerivedData/
+*.xcuserstate
+*.xcuserdatad
 
-# Files that might appear in the root of a volume
-.DocumentRevisions-V100
-.fseventsd
-.Spotlight-V100
-.TemporaryItems
-.Trashes
-.VolumeIcon.icns
-.com.apple.timemachine.donotpresent
+# Swift Package Manager
+.build/
+Packages/
 
-# Directories potentially created on remote AFP share
-.AppleDB
-.AppleDesktop
-Network Trash Folder
-Temporary Items
-.apdisk
+# Claude Code
+.claude/
