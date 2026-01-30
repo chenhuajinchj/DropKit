@@ -6,7 +6,6 @@ enum ClipboardItemType: String, Codable {
     case html
     case image
     case file
-    case url
 }
 
 struct ClipboardItem: Identifiable, Codable {
@@ -14,20 +13,20 @@ struct ClipboardItem: Identifiable, Codable {
     let type: ClipboardItemType
     let content: String
     let timestamp: Date
+    var isFavorite: Bool
 
     init(type: ClipboardItemType, content: String) {
         self.id = UUID()
         self.type = type
         self.content = content
         self.timestamp = Date()
+        self.isFavorite = false
     }
 
     var displayText: String {
         switch type {
         case .text, .html:
-            return content.prefix(100) + (content.count > 100 ? "..." : "")
-        case .url:
-            return content
+            return String(content.prefix(100)) + (content.count > 100 ? "..." : "")
         case .file:
             return URL(fileURLWithPath: content).lastPathComponent
         case .image:
@@ -41,7 +40,13 @@ struct ClipboardItem: Identifiable, Codable {
         case .html: return "doc.richtext"
         case .image: return "photo"
         case .file: return "doc.fill"
-        case .url: return "link"
         }
+    }
+
+    var relativeTime: String {
+        let formatter = RelativeDateTimeFormatter()
+        formatter.locale = Locale(identifier: "zh_CN")
+        formatter.unitsStyle = .short
+        return formatter.localizedString(for: timestamp, relativeTo: Date())
     }
 }

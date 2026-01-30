@@ -1,15 +1,44 @@
 import AppKit
 
+enum ClipboardFilterType: String, CaseIterable {
+    case all = "全部"
+    case text = "文本"
+    case image = "图片"
+    case file = "文件"
+    case favorites = "收藏"
+}
+
 @Observable
 class ClipboardMonitor {
     private(set) var items: [ClipboardItem] = []
     private var lastChangeCount: Int = 0
     private var timer: Timer?
 
+    var searchText: String = ""
+    var selectedFilter: ClipboardFilterType = .all
+
     let maxItems: Int = 50
 
     var effectiveMaxItems: Int {
         AppSettings.shared.clipboardMaxItems
+    }
+
+    var filteredItems: [ClipboardItem] {
+        var result = items
+
+        switch selectedFilter {
+        case .all: break
+        case .text: result = result.filter { $0.type == .text || $0.type == .html }
+        case .image: result = result.filter { $0.type == .image }
+        case .file: result = result.filter { $0.type == .file }
+        case .favorites: result = result.filter { $0.isFavorite }
+        }
+
+        if !searchText.isEmpty {
+            result = result.filter { $0.content.localizedCaseInsensitiveContains(searchText) }
+        }
+
+        return result
     }
 
     private var storageURL: URL {
@@ -52,22 +81,13 @@ class ClipboardMonitor {
             return ClipboardItem(type: .file, content: url.path)
         }
 
-        // 检查 URL
-        if let urlString = pasteboard.string(forType: .URL) {
-            return ClipboardItem(type: .url, content: urlString)
-        }
-
         // 检查 HTML
         if let html = pasteboard.string(forType: .html) {
             return ClipboardItem(type: .html, content: html)
         }
 
-        // 检查纯文本
+        // 检查纯文本（包括 URL，统一作为文本处理）
         if let text = pasteboard.string(forType: .string), !text.isEmpty {
-            // 检查是否是 URL
-            if let url = URL(string: text), url.scheme != nil {
-                return ClipboardItem(type: .url, content: text)
-            }
             return ClipboardItem(type: .text, content: text)
         }
 
@@ -102,16 +122,18 @@ class ClipboardMonitor {
         switch item.type {
         case .text, .html:
             pasteboard.setString(item.content, forType: .string)
-        case .url:
-            pasteboard.setString(item.content, forType: .string)
-            if let url = URL(string: item.content) {
-                pasteboard.setString(url.absoluteString, forType: .URL)
-            }
         case .file:
             let url = URL(fileURLWithPath: item.content)
             pasteboard.writeObjects([url as NSURL])
         case .image:
             break
+        }
+    }
+
+    func toggleFavorite(_ item: ClipboardItem) {
+        if let index = items.firstIndex(where: { $0.id == item.id }) {
+            items[index].isFavorite.toggle()
+            saveItems()
         }
     }
 
