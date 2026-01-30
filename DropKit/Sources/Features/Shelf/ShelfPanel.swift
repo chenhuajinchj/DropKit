@@ -203,13 +203,14 @@ class ShelfPanel: NSPanel {
             targetX = screenFrame.maxX - frame.width
         }
 
-        let targetOrigin = NSPoint(x: targetX, y: frame.origin.y)
+        let targetFrame = NSRect(x: targetX, y: frame.origin.y, width: frame.width, height: frame.height)
 
-        // 用动画滑动到边缘
+        // 用 setFrame 动画滑动到边缘
         NSAnimationContext.runAnimationGroup { context in
             context.duration = 0.25
             context.timingFunction = CAMediaTimingFunction(name: .easeOut)
-            self.animator().setFrameOrigin(targetOrigin)
+            context.allowsImplicitAnimation = true
+            self.setFrame(targetFrame, display: true, animate: true)
         }
 
         isDocked = true
