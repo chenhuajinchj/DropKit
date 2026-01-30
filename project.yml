@@ -1,0 +1,86 @@
+name: DropKit
+options:
+  bundleIdPrefix: com.dropkit
+  deploymentTarget:
+    macOS: "14.0"
+  xcodeVersion: "15.0"
+  createIntermediateGroups: true
+
+configs:
+  Debug: debug
+  Release: release
+
+settings:
+  base:
+    SWIFT_VERSION: "5.9"
+    MACOSX_DEPLOYMENT_TARGET: "14.0"
+
+targets:
+  DropKit:
+    type: application
+    platform: macOS
+    sources:
+      - Sources
+    resources:
+      - Resources
+    info:
+      path: Sources/Info.plist
+      properties:
+        LSMinimumSystemVersion: $(MACOSX_DEPLOYMENT_TARGET)
+        CFBundleName: $(PRODUCT_NAME)
+        CFBundleIdentifier: $(PRODUCT_BUNDLE_IDENTIFIER)
+        CFBundleShortVersionString: "1.0"
+        CFBundleVersion: "1"
+        LSApplicationCategoryType: public.app-category.utilities
+        NSPrincipalClass: NSApplication
+        NSHighResolutionCapable: true
+        LSUIElement: true
+    entitlements:
+      path: Sources/DropKit.entitlements
+      properties:
+        com.apple.security.app-sandbox: true
+        com.apple.security.network.client: true
+        com.apple.security.files.user-selected.read-write: true
+        com.apple.security.automation.apple-events: true
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.dropkit.DropKit
+        PRODUCT_NAME: DropKit
+        CODE_SIGN_STYLE: Automatic
+      configs:
+        Debug:
+          DEBUG_INFORMATION_FORMAT: dwarf-with-dsym
+          SWIFT_OPTIMIZATION_LEVEL: -Onone
+          CODE_SIGN_ENTITLEMENTS: Sources/DropKit.entitlements
+        Release:
+          SWIFT_OPTIMIZATION_LEVEL: -Osize
+          CODE_SIGN_ENTITLEMENTS: Sources/DropKit.entitlements
+
+  DropKitTests:
+    type: bundle.unit-test
+    platform: macOS
+    sources:
+      - Tests
+    dependencies:
+      - target: DropKit
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.dropkit.DropKit.tests
+
+schemes:
+  DropKit:
+    build:
+      targets:
+        DropKit: all
+        DropKitTests: [test]
+    run:
+      config: Debug
+    test:
+      config: Debug
+      gatherCoverageData: true
+      targets:
+        - DropKitTests
+    profile:
+      config: Release
+    archive:
+      config: Release
