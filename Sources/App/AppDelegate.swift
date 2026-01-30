@@ -7,6 +7,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     let shakeDetector = ShakeDetector()
     let clipboardMonitor = ClipboardMonitor()
     let menuBarController = MenuBarController()
+    let settingsWindowController = SettingsWindowController()
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         print("DropKit launched")
@@ -34,8 +35,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             self?.clipboardHistoryPanel?.showPanel()
         }
 
-        menuBarController.onShowSettings = {
-            NSApp.sendAction(Selector(("showSettingsWindow:")), to: nil, from: nil)
+        menuBarController.onShowSettings = { [weak self] in
+            self?.settingsWindowController.showSettings()
         }
 
         menuBarController.onQuit = {

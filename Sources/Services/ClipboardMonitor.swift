@@ -8,6 +8,10 @@ class ClipboardMonitor {
 
     let maxItems: Int = 50
 
+    var effectiveMaxItems: Int {
+        AppSettings.shared.clipboardMaxItems
+    }
+
     func start() {
         lastChangeCount = NSPasteboard.general.changeCount
         timer = Timer.scheduledTimer(withTimeInterval: 0.5, repeats: true) { [weak self] _ in
@@ -73,8 +77,8 @@ class ClipboardMonitor {
         items.insert(item, at: 0)
 
         // 限制数量
-        if items.count > maxItems {
-            items = Array(items.prefix(maxItems))
+        if items.count > effectiveMaxItems {
+            items = Array(items.prefix(effectiveMaxItems))
         }
     }
 

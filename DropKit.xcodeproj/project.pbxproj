@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		2181271BAFC16D9EA4EEB26F /* ShakeDetector.swift in Sources */ = {isa = PBXBuildFile; fileRef = D122D4B3DB99ACD2A0EAB3E7 /* ShakeDetector.swift */; };
+		3FBD74030017DAF23086F0A5 /* AppSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 93236182EE82152F26D6A646 /* AppSettings.swift */; };
 		4178A03FE0566562722ED8DF /* ShelfDropView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F60C94C7AFA978E8C515594E /* ShelfDropView.swift */; };
 		47B6B61BA7B8F30ABFAC3C3E /* ShelfViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 235512566F31B0C278F0426F /* ShelfViewModel.swift */; };
 		6BE849E33D2AD29736FAD4A5 /* ClipboardItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20CA3956C671F8B5C1FD7E7A /* ClipboardItem.swift */; };
@@ -17,7 +18,9 @@
 		89FF5FA3B652E49B3193CB53 /* MenuBarController.swift in Sources */ = {isa = PBXBuildFile; fileRef = E6E3630FD184F30CA1AB6751 /* MenuBarController.swift */; };
 		8E137FA90409E7D2EE6D143D /* ShelfView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C44A4C24A904E0FC70DFC2C2 /* ShelfView.swift */; };
 		95C0F18E768C69FA5147ECF3 /* ShelfItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44FDD7106C941C838847EC7A /* ShelfItem.swift */; };
+		A6DACED829B9422B472C0E8F /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C84A8076213D69BE544862B6 /* SettingsView.swift */; };
 		B1E9E1FC8D757F98DC7C7B87 /* DropKitApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5EEC229DE839084ADB696709 /* DropKitApp.swift */; };
+		B6D3F0349E4ECF0EB74EE08A /* SettingsWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8B36962356C979BF4C78FBC6 /* SettingsWindowController.swift */; };
 		C08FD2F76FA34B05F411E72B /* ShelfPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = F00441888AE62FF9BB4E0B6B /* ShelfPanel.swift */; };
 		C0C79249225A62921C5D84E8 /* DragMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = A519ACF998BC7304C7A58983 /* DragMonitor.swift */; };
 		D0A8D5038B0477210ED0046A /* DropKitTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7004D6682C39FC89EB7148B /* DropKitTests.swift */; };
@@ -45,11 +48,14 @@
 		5965F2EA17225AE772252800 /* ClipboardHistoryPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClipboardHistoryPanel.swift; sourceTree = "<group>"; };
 		5EEC229DE839084ADB696709 /* DropKitApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DropKitApp.swift; sourceTree = "<group>"; };
 		65068F7956E17086F9DE05F1 /* DropKit.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = DropKit.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		8B36962356C979BF4C78FBC6 /* SettingsWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsWindowController.swift; sourceTree = "<group>"; };
+		93236182EE82152F26D6A646 /* AppSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppSettings.swift; sourceTree = "<group>"; };
 		984A94B1DD1567F47CCB76A7 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		9EDA4B4D81A0ED80CA247906 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		A519ACF998BC7304C7A58983 /* DragMonitor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DragMonitor.swift; sourceTree = "<group>"; };
 		A7004D6682C39FC89EB7148B /* DropKitTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DropKitTests.swift; sourceTree = "<group>"; };
 		C44A4C24A904E0FC70DFC2C2 /* ShelfView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShelfView.swift; sourceTree = "<group>"; };
+		C84A8076213D69BE544862B6 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		D122D4B3DB99ACD2A0EAB3E7 /* ShakeDetector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShakeDetector.swift; sourceTree = "<group>"; };
 		D6EDD5D2152DFF4CDE093CCF /* ClipboardHistoryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClipboardHistoryView.swift; sourceTree = "<group>"; };
 		E251CAA34023A49B39C6440A /* DropKit.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = DropKit.entitlements; sourceTree = "<group>"; };
@@ -98,6 +104,7 @@
 				9EDA4B4D81A0ED80CA247906 /* Info.plist */,
 				1A4DFADDC3CC8F580B6F13F9 /* App */,
 				7B599B1F7692E031A9C27F42 /* Features */,
+				486F7A146DA0ACFFB978785E /* Models */,
 				FDECD4D9217645A2BB4F6F25 /* Services */,
 				DB4E0E9AE917BF0DD477C9C5 /* Utilities */,
 			);
@@ -110,6 +117,14 @@
 				E6E3630FD184F30CA1AB6751 /* MenuBarController.swift */,
 			);
 			path = MenuBar;
+			sourceTree = "<group>";
+		};
+		486F7A146DA0ACFFB978785E /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				93236182EE82152F26D6A646 /* AppSettings.swift */,
+			);
+			path = Models;
 			sourceTree = "<group>";
 		};
 		535E8D9727E1B80E76ED03CF /* Products */ = {
@@ -126,6 +141,7 @@
 			children = (
 				37CB26508878D7AF0CC50605 /* Clipboard */,
 				3F2054B63A2CE711E38C0343 /* MenuBar */,
+				F31F88A7E324E942C58DC30F /* Settings */,
 				22BDFAE86355F9473C343000 /* Shelf */,
 			);
 			path = Features;
@@ -153,6 +169,15 @@
 			children = (
 			);
 			path = Utilities;
+			sourceTree = "<group>";
+		};
+		F31F88A7E324E942C58DC30F /* Settings */ = {
+			isa = PBXGroup;
+			children = (
+				C84A8076213D69BE544862B6 /* SettingsView.swift */,
+				8B36962356C979BF4C78FBC6 /* SettingsWindowController.swift */,
+			);
+			path = Settings;
 			sourceTree = "<group>";
 		};
 		FDECD4D9217645A2BB4F6F25 /* Services */ = {
@@ -251,6 +276,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				7CF8080589D6B8D09CA7B494 /* AppDelegate.swift in Sources */,
+				3FBD74030017DAF23086F0A5 /* AppSettings.swift in Sources */,
 				FA4D571EB5406BA943E4742D /* AppState.swift in Sources */,
 				771C574A63D0D16DEEA041D6 /* ClipboardHistoryPanel.swift in Sources */,
 				DAC81290E30B71F92EE032F9 /* ClipboardHistoryView.swift in Sources */,
@@ -259,6 +285,8 @@
 				C0C79249225A62921C5D84E8 /* DragMonitor.swift in Sources */,
 				B1E9E1FC8D757F98DC7C7B87 /* DropKitApp.swift in Sources */,
 				89FF5FA3B652E49B3193CB53 /* MenuBarController.swift in Sources */,
+				A6DACED829B9422B472C0E8F /* SettingsView.swift in Sources */,
+				B6D3F0349E4ECF0EB74EE08A /* SettingsWindowController.swift in Sources */,
 				2181271BAFC16D9EA4EEB26F /* ShakeDetector.swift in Sources */,
 				4178A03FE0566562722ED8DF /* ShelfDropView.swift in Sources */,
 				95C0F18E768C69FA5147ECF3 /* ShelfItem.swift in Sources */,

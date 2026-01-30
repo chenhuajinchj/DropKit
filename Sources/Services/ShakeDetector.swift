@@ -9,10 +9,10 @@ class ShakeDetector {
     private var lastDirection: Int = 0  // -1: left, 1: right, 0: none
     private var directionChanges: [Date] = []
 
-    // 配置参数
-    var minShakes: Int = 4
-    var timeWindow: TimeInterval = 0.3
-    var minMovement: CGFloat = 30
+    // 配置参数（从 AppSettings 读取）
+    var minShakes: Int { AppSettings.shared.shakeMinShakes }
+    var timeWindow: TimeInterval { AppSettings.shared.shakeTimeWindow }
+    var minMovement: CGFloat { CGFloat(AppSettings.shared.shakeMinMovement) }
 
     var onShake: (() -> Void)?
 

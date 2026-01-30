@@ -8,8 +8,7 @@ struct DropKitApp: App {
     var body: some Scene {
         // Menu bar app with no main window initially
         Settings {
-            Text("Settings placeholder")
-                .frame(width: 400, height: 300)
+            SettingsView()
         }
     }
 }
