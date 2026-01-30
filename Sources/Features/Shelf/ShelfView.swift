@@ -46,6 +46,7 @@ struct ShelfView: View {
                     .padding(.vertical, 8)
                     .background(.regularMaterial)
                     .clipShape(RoundedRectangle(cornerRadius: 8))
+                    .draggable(item.url)
                 }
             }
             .padding(12)
