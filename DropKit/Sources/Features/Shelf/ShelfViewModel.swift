@@ -20,6 +20,11 @@ class ShelfViewModel {
     // MARK: - Item Management
 
     func addItem(url: URL) {
+        // 检查是否已存在相同文件（通过路径判断）
+        if items.contains(where: { $0.url == url }) {
+            return
+        }
+
         var item = ShelfItem(url: url)
         items.append(item)
         loadThumbnail(for: items.count - 1)

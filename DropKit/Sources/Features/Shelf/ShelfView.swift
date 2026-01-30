@@ -303,6 +303,7 @@ struct ExpandedShelfView: View {
 struct GridItemView: View {
     let item: ShelfItem
     var viewModel: ShelfViewModel
+    @State private var isHovered = false
 
     var body: some View {
         VStack(spacing: 6) {
@@ -338,6 +339,7 @@ struct GridItemView: View {
                 }
                 .buttonStyle(.plain)
                 .padding(4)
+                .opacity(isHovered ? 1 : 0)
             }
 
             // 文件名
@@ -362,6 +364,18 @@ struct GridItemView: View {
                 }
             }
         }
+        .padding(6)
+        .background(
+            RoundedRectangle(cornerRadius: 10)
+                .fill(isHovered ? Color.primary.opacity(0.08) : Color.clear)
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 10)
+                .stroke(isHovered ? Color.accentColor.opacity(0.5) : Color.clear, lineWidth: 2)
+        )
+        .onHover { hovering in
+            isHovered = hovering
+        }
         .draggable(item.url)
         .contextMenu {
             Button("在 Finder 中显示") {
@@ -380,23 +394,24 @@ struct GridItemView: View {
 struct ListItemView: View {
     let item: ShelfItem
     var viewModel: ShelfViewModel
+    @State private var isHovered = false
 
     var body: some View {
-        HStack(spacing: 12) {
+        HStack(spacing: 10) {
             // 缩略图
             if let thumbnail = item.thumbnail {
                 Image(nsImage: thumbnail)
                     .resizable()
                     .aspectRatio(contentMode: .fill)
-                    .frame(width: 40, height: 40)
-                    .clipShape(RoundedRectangle(cornerRadius: 6))
+                    .frame(width: 32, height: 32)
+                    .clipShape(RoundedRectangle(cornerRadius: 5))
             } else {
-                RoundedRectangle(cornerRadius: 6)
+                RoundedRectangle(cornerRadius: 5)
                     .fill(Color.secondary.opacity(0.1))
-                    .frame(width: 40, height: 40)
+                    .frame(width: 32, height: 32)
                     .overlay {
                         Image(systemName: item.fileType.icon)
-                            .font(.system(size: 16))
+                            .font(.system(size: 14))
                             .foregroundStyle(.secondary)
                     }
             }
@@ -410,9 +425,9 @@ struct ListItemView: View {
             Spacer()
 
             // 大小和尺寸
-            VStack(alignment: .trailing, spacing: 2) {
+            VStack(alignment: .trailing, spacing: 1) {
                 Text(item.formattedSize)
-                    .font(.caption)
+                    .font(.caption2)
                     .foregroundStyle(.secondary)
                 if let dims = item.formattedDimensions {
                     Text(dims)
@@ -426,14 +441,21 @@ struct ListItemView: View {
                 viewModel.removeItem(item)
             } label: {
                 Image(systemName: "xmark.circle.fill")
+                    .font(.system(size: 14))
                     .foregroundStyle(.secondary)
             }
             .buttonStyle(.plain)
+            .opacity(isHovered ? 1 : 0)
         }
-        .padding(.horizontal, 12)
-        .padding(.vertical, 8)
-        .background(Color.primary.opacity(0.03))
-        .clipShape(RoundedRectangle(cornerRadius: 8))
+        .padding(.horizontal, 10)
+        .padding(.vertical, 6)
+        .background(
+            RoundedRectangle(cornerRadius: 8)
+                .fill(isHovered ? Color.accentColor.opacity(0.15) : Color.primary.opacity(0.03))
+        )
+        .onHover { hovering in
+            isHovered = hovering
+        }
         .draggable(item.url)
         .contextMenu {
             Button("在 Finder 中显示") {
