@@ -65,7 +65,7 @@ class ClipboardHistoryPanel: NSPanel {
 
     func showPanel() {
         center()
-        orderFront(nil)
+        makeKeyAndOrderFront(nil)
         startClickMonitor()
     }
 
