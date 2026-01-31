@@ -7,7 +7,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     var permissionGuideWindow: PermissionGuideWindow?
     let dragMonitor = DragMonitor()
     let shakeDetector = ShakeDetector()
-    let clipboardMonitor = ClipboardMonitor()
+    let clipboardMonitor = ClipboardMonitor.shared
     let menuBarController = MenuBarController()
     let settingsWindowController = SettingsWindowController()
 

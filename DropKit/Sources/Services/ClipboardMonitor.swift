@@ -10,6 +10,8 @@ enum ClipboardFilterType: String, CaseIterable {
 
 @Observable
 class ClipboardMonitor {
+    static let shared = ClipboardMonitor()
+
     private(set) var items: [ClipboardItem] = []
     private var lastChangeCount: Int = 0
     private var timer: Timer?
@@ -18,6 +20,10 @@ class ClipboardMonitor {
     var selectedFilter: ClipboardFilterType = .all
 
     let maxItems: Int = 50
+
+    var effectiveRetentionDays: Int {
+        AppSettings.shared.clipboardRetentionDays
+    }
 
     var effectiveMaxItems: Int {
         AppSettings.shared.clipboardMaxItems
@@ -106,13 +112,28 @@ class ClipboardMonitor {
         }
 
         items.insert(item, at: 0)
+        cleanupExpiredItems()
+        saveItems()
+    }
 
-        // 限制数量
-        if items.count > effectiveMaxItems {
-            items = Array(items.prefix(effectiveMaxItems))
+    private func cleanupExpiredItems() {
+        // 按天数清理（收藏的不删除）
+        let days = effectiveRetentionDays
+        if days > 0 {
+            let cutoffDate = Calendar.current.date(byAdding: .day, value: -days, to: Date())!
+            items.removeAll { $0.timestamp < cutoffDate && !$0.isFavorite }
         }
 
-        saveItems()
+        // 按条数清理（收藏的不删除）
+        let maxItems = effectiveMaxItems
+        if maxItems > 0 && items.count > maxItems {
+            // 保留收藏的 + 最新的非收藏项
+            let favorites = items.filter { $0.isFavorite }
+            var nonFavorites = items.filter { !$0.isFavorite }
+            let allowedNonFavorites = max(0, maxItems - favorites.count)
+            nonFavorites = Array(nonFavorites.prefix(allowedNonFavorites))
+            items = (favorites + nonFavorites).sorted { $0.timestamp > $1.timestamp }
+        }
     }
 
     func copyToClipboard(_ item: ClipboardItem) {
@@ -154,6 +175,7 @@ class ClipboardMonitor {
         do {
             let data = try Data(contentsOf: storageURL)
             items = try JSONDecoder().decode([ClipboardItem].self, from: data)
+            cleanupExpiredItems()
         } catch {
             print("Failed to load clipboard history: \(error)")
         }

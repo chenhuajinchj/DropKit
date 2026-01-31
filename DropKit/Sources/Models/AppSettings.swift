@@ -16,7 +16,12 @@ class AppSettings {
         didSet { defaults.set(shakeMinMovement, forKey: "shakeMinMovement") }
     }
 
-    // 剪切板历史
+    // 剪切板历史保留天数（0 = 永久）
+    var clipboardRetentionDays: Int {
+        didSet { defaults.set(clipboardRetentionDays, forKey: "clipboardRetentionDays") }
+    }
+
+    // 剪切板历史最大条数（0 = 永久）
     var clipboardMaxItems: Int {
         didSet { defaults.set(clipboardMaxItems, forKey: "clipboardMaxItems") }
     }
@@ -41,8 +46,11 @@ class AppSettings {
         let storedMovement = defaults.double(forKey: "shakeMinMovement")
         shakeMinMovement = storedMovement != 0 ? storedMovement : 30
 
-        let storedMaxItems = defaults.integer(forKey: "clipboardMaxItems")
-        clipboardMaxItems = storedMaxItems != 0 ? storedMaxItems : 50
+        // clipboardRetentionDays 默认 0 = 永久保存
+        clipboardRetentionDays = defaults.integer(forKey: "clipboardRetentionDays")
+
+        // clipboardMaxItems 默认 0 = 永久保存
+        clipboardMaxItems = defaults.integer(forKey: "clipboardMaxItems")
 
         // 读取系统实际状态
         if #available(macOS 13.0, *) {

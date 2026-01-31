@@ -13,9 +13,25 @@ struct ClipboardHistoryView: View {
     var body: some View {
         ZStack {
             VStack(spacing: 0) {
-                // 拖动把手区域
-                WindowDragArea()
-                    .frame(height: 12)
+                // 拖动把手区域 + 关闭按钮
+                ZStack {
+                    WindowDragArea()
+                        .frame(height: 12)
+
+                    HStack {
+                        Spacer()
+                        Button {
+                            onClose?()
+                        } label: {
+                            Image(systemName: "xmark.circle.fill")
+                                .font(.system(size: 14))
+                                .foregroundStyle(.secondary)
+                        }
+                        .buttonStyle(.plain)
+                        .padding(.trailing, 8)
+                        .padding(.top, 4)
+                    }
+                }
 
                 // 搜索框
                 headerView

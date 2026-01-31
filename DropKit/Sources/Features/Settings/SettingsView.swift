@@ -3,6 +3,8 @@ import KeyboardShortcuts
 
 struct SettingsView: View {
     @Bindable var settings = AppSettings.shared
+    @State private var showDeleteConfirmation = false
+    @State private var showDeleteSuccess = false
 
     var body: some View {
         TabView {
@@ -26,7 +28,7 @@ struct SettingsView: View {
                     Label("快捷键", systemImage: "keyboard")
                 }
         }
-        .frame(width: 400, height: 280)
+        .frame(width: 400, height: 340)
     }
 
     private var generalTab: some View {
@@ -55,9 +57,80 @@ struct SettingsView: View {
 
     private var clipboardTab: some View {
         Form {
-            Stepper("最大历史条数: \(settings.clipboardMaxItems)", value: $settings.clipboardMaxItems, in: 10...200, step: 10)
+            // 保留时长
+            VStack(alignment: .leading, spacing: 4) {
+                HStack {
+                    Text("保留时长")
+                    Spacer()
+                    TextField("", value: $settings.clipboardRetentionDays, format: .number)
+                        .textFieldStyle(.roundedBorder)
+                        .frame(width: 60)
+                        .multilineTextAlignment(.center)
+                    Text("天")
+                }
+                Text("输入 0 表示永久保留，仅统计和删除未收藏条目")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+            }
+
+            Divider()
+
+            // 最大保留条数
+            VStack(alignment: .leading, spacing: 4) {
+                HStack {
+                    Text("最大保留条数")
+                    Spacer()
+                    TextField("", value: $settings.clipboardMaxItems, format: .number)
+                        .textFieldStyle(.roundedBorder)
+                        .frame(width: 60)
+                        .multilineTextAlignment(.center)
+                    Text("条")
+                }
+                Text("输入 0 表示永久保留，仅统计和删除未收藏条目")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+            }
+
+            Divider()
+
+            // 删除历史记录按钮
+            HStack {
+                Spacer()
+                Button(role: .destructive) {
+                    showDeleteConfirmation = true
+                } label: {
+                    HStack {
+                        Image(systemName: "trash")
+                        Text("删除历史记录")
+                    }
+                }
+                .buttonStyle(.bordered)
+                Spacer()
+            }
+
+            if showDeleteSuccess {
+                HStack {
+                    Spacer()
+                    Text("已删除所有历史记录")
+                        .font(.caption)
+                        .foregroundColor(.green)
+                    Spacer()
+                }
+            }
         }
         .padding()
+        .alert("确认删除", isPresented: $showDeleteConfirmation) {
+            Button("取消", role: .cancel) { }
+            Button("删除", role: .destructive) {
+                ClipboardMonitor.shared.clearAll()
+                showDeleteSuccess = true
+                DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+                    showDeleteSuccess = false
+                }
+            }
+        } message: {
+            Text("确定要删除所有剪切板历史记录吗？此操作无法撤销。")
+        }
     }
 
     private var shortcutsTab: some View {
