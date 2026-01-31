@@ -11,6 +11,13 @@ class DraggableStackNSView: NSView, NSDraggingSource {
     private var mouseDownLocation: NSPoint?
     private var draggedUrls: [URL] = []
 
+    // 缓存通用文件图标
+    private static let genericFileIcon: NSImage = {
+        let icon = NSImage(systemSymbolName: "doc.fill", accessibilityDescription: nil) ?? NSImage()
+        icon.size = NSSize(width: 80, height: 80)
+        return icon
+    }()
+
     override init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         wantsLayer = true
@@ -56,50 +63,24 @@ class DraggableStackNSView: NSView, NSDraggingSource {
         // 记录正在拖拽的 URLs
         draggedUrls = urls
 
-        // 为每个文件创建单独的拖拽项
+        // 获取拖拽图像（使用已缓存的缩略图）
+        let dragImage = thumbnails.first ?? nil ?? Self.genericFileIcon
+        let imageSize = NSSize(width: 80, height: 80)
+
+        // 为每个文件创建拖拽项
         var draggingItems: [NSDraggingItem] = []
-
-        for url in urls {
+        for (index, url) in urls.enumerated() {
             let draggingItem = NSDraggingItem(pasteboardWriter: url as NSURL)
-
-            // 设置拖拽图像
-            let dragImage = createDragImage()
-            let imageSize = dragImage.size
-            let imageRect = NSRect(
-                x: bounds.midX - imageSize.width / 2,
-                y: bounds.midY - imageSize.height / 2,
-                width: imageSize.width,
-                height: imageSize.height
+            let itemImage = (index < thumbnails.count ? thumbnails[index] : nil) ?? Self.genericFileIcon
+            draggingItem.setDraggingFrame(
+                NSRect(origin: NSPoint(x: CGFloat(index) * 10, y: CGFloat(index) * -10), size: imageSize),
+                contents: itemImage
             )
-            draggingItem.setDraggingFrame(imageRect, contents: dragImage)
             draggingItems.append(draggingItem)
         }
 
         // 开始拖拽会话
         beginDraggingSession(with: draggingItems, event: event, source: self)
-    }
-
-    private func createDragImage() -> NSImage {
-        let size = NSSize(width: 80, height: 80)
-        let image = NSImage(size: size)
-        image.lockFocus()
-
-        // 获取缩略图或系统图标
-        let thumbnail: NSImage
-        if let firstThumb = thumbnails.first ?? nil {
-            thumbnail = firstThumb
-        } else if let firstUrl = urls.first {
-            thumbnail = NSWorkspace.shared.icon(forFile: firstUrl.path)
-        } else {
-            thumbnail = NSImage(systemSymbolName: "doc", accessibilityDescription: nil) ?? NSImage()
-        }
-
-        // 绘制缩略图
-        let iconRect = NSRect(x: 0, y: 0, width: 80, height: 80)
-        thumbnail.draw(in: iconRect, from: .zero, operation: .sourceOver, fraction: 1.0)
-
-        image.unlockFocus()
-        return image
     }
 
     // MARK: - NSDraggingSource
@@ -186,11 +167,19 @@ class DraggableItemNSView: NSView, NSDraggingSource {
     var url: URL?
     var thumbnail: NSImage?
     var getSelectedUrls: (() -> [URL])?
+    var getSelectedThumbnails: (() -> [NSImage?])?  // 获取选中项的缩略图
     var isSelected: (() -> Bool)?
     var onDragEnd: (([URL]) -> Void)?
     private var isDragging = false
     private var mouseDownLocation: NSPoint?
     private var draggedUrls: [URL] = []
+
+    // 缓存通用文件图标，避免重复创建
+    private static let genericFileIcon: NSImage = {
+        let icon = NSImage(systemSymbolName: "doc.fill", accessibilityDescription: nil) ?? NSImage()
+        icon.size = NSSize(width: 60, height: 60)
+        return icon
+    }()
 
     override init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
@@ -232,24 +221,29 @@ class DraggableItemNSView: NSView, NSDraggingSource {
     private func startDragging(with event: NSEvent) {
         guard let url = url else { return }
 
-        // 判断要拖拽的 URLs
+        // 判断要拖拽的 URLs 和对应的缩略图
         let urlsToDrag: [URL]
+        let thumbnailsToDrag: [NSImage?]
+
         if let isSelected = isSelected, isSelected(), let getSelectedUrls = getSelectedUrls {
             // 如果当前项被选中，拖拽所有选中的文件
             urlsToDrag = getSelectedUrls()
+            thumbnailsToDrag = getSelectedThumbnails?() ?? []
         } else {
             // 如果当前项未被选中，只拖拽当前文件
             urlsToDrag = [url]
+            thumbnailsToDrag = [thumbnail]
         }
 
         draggedUrls = urlsToDrag
 
-        // 为每个文件创建拖拽项
+        // 为每个文件创建拖拽项（使用已缓存的缩略图，避免同步 I/O）
         var draggingItems: [NSDraggingItem] = []
         for (index, dragUrl) in urlsToDrag.enumerated() {
             let draggingItem = NSDraggingItem(pasteboardWriter: dragUrl as NSURL)
-            // 设置拖拽图像（第一个用缩略图，其他用文件图标）
-            let image = (index == 0 && thumbnail != nil) ? thumbnail! : NSWorkspace.shared.icon(forFile: dragUrl.path)
+            // 优先使用已缓存的缩略图，否则使用通用图标（不读取文件）
+            let cachedThumbnail = index < thumbnailsToDrag.count ? thumbnailsToDrag[index] : nil
+            let image = cachedThumbnail ?? Self.genericFileIcon
             let imageSize = NSSize(width: 60, height: 60)
             draggingItem.setDraggingFrame(
                 NSRect(origin: NSPoint(x: CGFloat(index) * 10, y: CGFloat(index) * -10), size: imageSize),
@@ -292,6 +286,7 @@ struct DraggableItemView<Content: View>: NSViewRepresentable {
     let url: URL
     let thumbnail: NSImage?
     let getSelectedUrls: () -> [URL]
+    let getSelectedThumbnails: () -> [NSImage?]
     let isSelected: () -> Bool
     let onDragEnd: ([URL]) -> Void
     let content: () -> Content
@@ -300,6 +295,7 @@ struct DraggableItemView<Content: View>: NSViewRepresentable {
         url: URL,
         thumbnail: NSImage? = nil,
         getSelectedUrls: @escaping () -> [URL] = { [] },
+        getSelectedThumbnails: @escaping () -> [NSImage?] = { [] },
         isSelected: @escaping () -> Bool = { false },
         onDragEnd: @escaping ([URL]) -> Void = { _ in },
         @ViewBuilder content: @escaping () -> Content
@@ -307,6 +303,7 @@ struct DraggableItemView<Content: View>: NSViewRepresentable {
         self.url = url
         self.thumbnail = thumbnail
         self.getSelectedUrls = getSelectedUrls
+        self.getSelectedThumbnails = getSelectedThumbnails
         self.isSelected = isSelected
         self.onDragEnd = onDragEnd
         self.content = content
@@ -317,6 +314,7 @@ struct DraggableItemView<Content: View>: NSViewRepresentable {
         view.url = url
         view.thumbnail = thumbnail
         view.getSelectedUrls = getSelectedUrls
+        view.getSelectedThumbnails = getSelectedThumbnails
         view.isSelected = isSelected
         view.onDragEnd = onDragEnd
 
@@ -338,6 +336,7 @@ struct DraggableItemView<Content: View>: NSViewRepresentable {
         nsView.url = url
         nsView.thumbnail = thumbnail
         nsView.getSelectedUrls = getSelectedUrls
+        nsView.getSelectedThumbnails = getSelectedThumbnails
         nsView.isSelected = isSelected
         nsView.onDragEnd = onDragEnd
 

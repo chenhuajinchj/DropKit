@@ -340,6 +340,9 @@ struct GridItemView: View {
             getSelectedUrls: {
                 viewModel.selectedItemIds.isEmpty ? [item.url] : viewModel.selectedUrls
             },
+            getSelectedThumbnails: {
+                viewModel.selectedItemIds.isEmpty ? [item.thumbnail] : viewModel.selectedThumbnails
+            },
             isSelected: {
                 viewModel.selectedItemIds.contains(item.id)
             },
@@ -464,6 +467,9 @@ struct ListItemView: View {
             thumbnail: item.thumbnail,
             getSelectedUrls: {
                 viewModel.selectedItemIds.isEmpty ? [item.url] : viewModel.selectedUrls
+            },
+            getSelectedThumbnails: {
+                viewModel.selectedItemIds.isEmpty ? [item.thumbnail] : viewModel.selectedThumbnails
             },
             isSelected: {
                 viewModel.selectedItemIds.contains(item.id)

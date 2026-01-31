@@ -174,11 +174,19 @@ class ShelfViewModel {
         let itemId = item.id
 
         Task {
-            let thumbnail = await generateThumbnail(for: item.url)
+            // 并行加载缩略图和文件信息
+            async let thumbnailTask = generateThumbnail(for: item.url)
+            async let fileInfoTask = ShelfItem.loadFileInfo(for: item.url, fileType: item.fileType)
+
+            let thumbnail = await thumbnailTask
+            let fileInfo = await fileInfoTask
+
             await MainActor.run {
                 // 确保 item 还在且位置正确
                 if let currentIndex = self.items.firstIndex(where: { $0.id == itemId }) {
                     self.items[currentIndex].thumbnail = thumbnail
+                    self.items[currentIndex].fileSize = fileInfo.fileSize
+                    self.items[currentIndex].dimensions = fileInfo.dimensions
                 }
             }
         }
@@ -224,6 +232,10 @@ class ShelfViewModel {
 
     var selectedUrls: [URL] {
         selectedItems.map { $0.url }
+    }
+
+    var selectedThumbnails: [NSImage?] {
+        selectedItems.map { $0.thumbnail }
     }
 
     func toggleSelection(_ itemId: UUID, modifierFlags: NSEvent.ModifierFlags) {

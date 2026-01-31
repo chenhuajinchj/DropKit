@@ -32,41 +32,50 @@ struct ShelfItem: Identifiable {
         self.thumbnail = nil
         self.fileSize = 0
         self.dimensions = nil
-        self.fileType = .other
-
-        // 获取文件信息
-        loadFileInfo()
+        // 快速判断文件类型（仅基于扩展名，不读取文件）
+        self.fileType = Self.determineFileType(from: url)
     }
 
-    mutating func loadFileInfo() {
-        // 获取文件大小
-        if let attrs = try? FileManager.default.attributesOfItem(atPath: url.path),
-           let size = attrs[.size] as? Int64 {
-            fileSize = size
-        }
-
-        // 判断文件类型
+    /// 仅基于扩展名判断文件类型（同步，快速）
+    private static func determineFileType(from url: URL) -> FileType {
         let ext = url.pathExtension.lowercased()
         let imageExtensions = ["jpg", "jpeg", "png", "gif", "heic", "webp", "tiff", "bmp"]
         let videoExtensions = ["mp4", "mov", "avi", "mkv", "webm"]
         let documentExtensions = ["pdf", "doc", "docx", "xls", "xlsx", "ppt", "pptx", "txt", "md"]
 
         if imageExtensions.contains(ext) {
-            fileType = .image
-            // 获取图片尺寸
+            return .image
+        } else if videoExtensions.contains(ext) {
+            return .video
+        } else if documentExtensions.contains(ext) {
+            return .document
+        } else {
+            return .other
+        }
+    }
+
+    /// 异步加载文件详细信息（文件大小、图片尺寸）
+    static func loadFileInfo(for url: URL, fileType: FileType) async -> (fileSize: Int64, dimensions: CGSize?) {
+        var fileSize: Int64 = 0
+        var dimensions: CGSize? = nil
+
+        // 获取文件大小
+        if let attrs = try? FileManager.default.attributesOfItem(atPath: url.path),
+           let size = attrs[.size] as? Int64 {
+            fileSize = size
+        }
+
+        // 获取图片尺寸（仅图片类型）
+        if fileType == .image {
             if let imageSource = CGImageSourceCreateWithURL(url as CFURL, nil),
                let properties = CGImageSourceCopyPropertiesAtIndex(imageSource, 0, nil) as? [String: Any],
                let width = properties[kCGImagePropertyPixelWidth as String] as? Int,
                let height = properties[kCGImagePropertyPixelHeight as String] as? Int {
                 dimensions = CGSize(width: width, height: height)
             }
-        } else if videoExtensions.contains(ext) {
-            fileType = .video
-        } else if documentExtensions.contains(ext) {
-            fileType = .document
-        } else {
-            fileType = .other
         }
+
+        return (fileSize, dimensions)
     }
 
     // 格式化文件大小
