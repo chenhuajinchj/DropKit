@@ -179,14 +179,18 @@ struct DraggableStackView: NSViewRepresentable {
     }
 }
 
-// MARK: - 单文件拖拽 NSView
+// MARK: - 单文件拖拽 NSView（支持多选）
 
-/// 支持单文件拖拽的 NSView 包装器（用于展开视图中的 Grid/List Item）
+/// 支持单文件/多文件拖拽的 NSView 包装器（用于展开视图中的 Grid/List Item）
 class DraggableItemNSView: NSView, NSDraggingSource {
     var url: URL?
     var thumbnail: NSImage?
+    var getSelectedUrls: (() -> [URL])?
+    var isSelected: (() -> Bool)?
+    var onDragEnd: (([URL]) -> Void)?
     private var isDragging = false
     private var mouseDownLocation: NSPoint?
+    private var draggedUrls: [URL] = []
 
     override init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
@@ -215,7 +219,7 @@ class DraggableItemNSView: NSView, NSDraggingSource {
         }
 
         isDragging = true
-        startDragging(with: event, url: url)
+        startDragging(with: event)
     }
 
     override func mouseUp(with event: NSEvent) {
@@ -225,39 +229,36 @@ class DraggableItemNSView: NSView, NSDraggingSource {
 
     // MARK: - Dragging Source
 
-    private func startDragging(with event: NSEvent, url: URL) {
-        let draggingItem = NSDraggingItem(pasteboardWriter: url as NSURL)
+    private func startDragging(with event: NSEvent) {
+        guard let url = url else { return }
 
-        let dragImage = createDragImage(for: url)
-        let imageSize = dragImage.size
-        let imageRect = NSRect(
-            x: bounds.midX - imageSize.width / 2,
-            y: bounds.midY - imageSize.height / 2,
-            width: imageSize.width,
-            height: imageSize.height
-        )
-        draggingItem.setDraggingFrame(imageRect, contents: dragImage)
-
-        beginDraggingSession(with: [draggingItem], event: event, source: self)
-    }
-
-    private func createDragImage(for url: URL) -> NSImage {
-        let size = NSSize(width: 60, height: 60)
-        let image = NSImage(size: size)
-        image.lockFocus()
-
-        let thumb: NSImage
-        if let t = thumbnail {
-            thumb = t
+        // 判断要拖拽的 URLs
+        let urlsToDrag: [URL]
+        if let isSelected = isSelected, isSelected(), let getSelectedUrls = getSelectedUrls {
+            // 如果当前项被选中，拖拽所有选中的文件
+            urlsToDrag = getSelectedUrls()
         } else {
-            thumb = NSWorkspace.shared.icon(forFile: url.path)
+            // 如果当前项未被选中，只拖拽当前文件
+            urlsToDrag = [url]
         }
 
-        let iconRect = NSRect(x: 0, y: 0, width: 60, height: 60)
-        thumb.draw(in: iconRect, from: .zero, operation: .sourceOver, fraction: 1.0)
+        draggedUrls = urlsToDrag
 
-        image.unlockFocus()
-        return image
+        // 为每个文件创建拖拽项
+        var draggingItems: [NSDraggingItem] = []
+        for (index, dragUrl) in urlsToDrag.enumerated() {
+            let draggingItem = NSDraggingItem(pasteboardWriter: dragUrl as NSURL)
+            // 设置拖拽图像（第一个用缩略图，其他用文件图标）
+            let image = (index == 0 && thumbnail != nil) ? thumbnail! : NSWorkspace.shared.icon(forFile: dragUrl.path)
+            let imageSize = NSSize(width: 60, height: 60)
+            draggingItem.setDraggingFrame(
+                NSRect(origin: NSPoint(x: CGFloat(index) * 10, y: CGFloat(index) * -10), size: imageSize),
+                contents: image
+            )
+            draggingItems.append(draggingItem)
+        }
+
+        beginDraggingSession(with: draggingItems, event: event, source: self)
     }
 
     // MARK: - NSDraggingSource
@@ -265,17 +266,49 @@ class DraggableItemNSView: NSView, NSDraggingSource {
     func draggingSession(_ session: NSDraggingSession, sourceOperationMaskFor context: NSDraggingContext) -> NSDragOperation {
         return context == .outsideApplication ? [.copy, .move] : .copy
     }
+
+    func draggingSession(_ session: NSDraggingSession, endedAt screenPoint: NSPoint, operation: NSDragOperation) {
+        isDragging = false
+
+        // 如果是移动操作，通知外部移除这些文件
+        if operation == .move {
+            let urlsToCheck = draggedUrls
+            // 延迟检查，确保文件系统操作完成
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
+                // 检查文件是否真的被移动了（原路径不存在）
+                let movedUrls = urlsToCheck.filter { !FileManager.default.fileExists(atPath: $0.path) }
+                if !movedUrls.isEmpty {
+                    self?.onDragEnd?(movedUrls)
+                }
+            }
+        }
+
+        draggedUrls = []
+    }
 }
 
-/// 单文件拖拽的 SwiftUI 包装器
+/// 单文件/多文件拖拽的 SwiftUI 包装器
 struct DraggableItemView<Content: View>: NSViewRepresentable {
     let url: URL
     let thumbnail: NSImage?
+    let getSelectedUrls: () -> [URL]
+    let isSelected: () -> Bool
+    let onDragEnd: ([URL]) -> Void
     let content: () -> Content
 
-    init(url: URL, thumbnail: NSImage? = nil, @ViewBuilder content: @escaping () -> Content) {
+    init(
+        url: URL,
+        thumbnail: NSImage? = nil,
+        getSelectedUrls: @escaping () -> [URL] = { [] },
+        isSelected: @escaping () -> Bool = { false },
+        onDragEnd: @escaping ([URL]) -> Void = { _ in },
+        @ViewBuilder content: @escaping () -> Content
+    ) {
         self.url = url
         self.thumbnail = thumbnail
+        self.getSelectedUrls = getSelectedUrls
+        self.isSelected = isSelected
+        self.onDragEnd = onDragEnd
         self.content = content
     }
 
@@ -283,6 +316,9 @@ struct DraggableItemView<Content: View>: NSViewRepresentable {
         let view = DraggableItemNSView()
         view.url = url
         view.thumbnail = thumbnail
+        view.getSelectedUrls = getSelectedUrls
+        view.isSelected = isSelected
+        view.onDragEnd = onDragEnd
 
         let hostingView = NSHostingView(rootView: content())
         hostingView.translatesAutoresizingMaskIntoConstraints = false
@@ -301,6 +337,9 @@ struct DraggableItemView<Content: View>: NSViewRepresentable {
     func updateNSView(_ nsView: DraggableItemNSView, context: Context) {
         nsView.url = url
         nsView.thumbnail = thumbnail
+        nsView.getSelectedUrls = getSelectedUrls
+        nsView.isSelected = isSelected
+        nsView.onDragEnd = onDragEnd
 
         if let hostingView = nsView.subviews.first as? NSHostingView<Content> {
             hostingView.rootView = content()

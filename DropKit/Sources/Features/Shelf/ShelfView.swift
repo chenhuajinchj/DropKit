@@ -334,7 +334,19 @@ struct GridItemView: View {
     }
 
     var body: some View {
-        DraggableItemView(url: item.url, thumbnail: item.thumbnail) {
+        DraggableItemView(
+            url: item.url,
+            thumbnail: item.thumbnail,
+            getSelectedUrls: {
+                viewModel.selectedItemIds.isEmpty ? [item.url] : viewModel.selectedUrls
+            },
+            isSelected: {
+                viewModel.selectedItemIds.contains(item.id)
+            },
+            onDragEnd: { draggedUrls in
+                viewModel.removeItems(byUrls: draggedUrls)
+            }
+        ) {
             gridItemContent
         }
         .contextMenu {
@@ -447,7 +459,19 @@ struct ListItemView: View {
     }
 
     var body: some View {
-        DraggableItemView(url: item.url, thumbnail: item.thumbnail) {
+        DraggableItemView(
+            url: item.url,
+            thumbnail: item.thumbnail,
+            getSelectedUrls: {
+                viewModel.selectedItemIds.isEmpty ? [item.url] : viewModel.selectedUrls
+            },
+            isSelected: {
+                viewModel.selectedItemIds.contains(item.id)
+            },
+            onDragEnd: { draggedUrls in
+                viewModel.removeItems(byUrls: draggedUrls)
+            }
+        ) {
             listItemContent
         }
         .contextMenu {
