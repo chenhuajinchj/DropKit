@@ -35,12 +35,23 @@ class ShelfViewModel {
         if isSwiftUIDragCache {
             // 临时文件用文件名比较
             let fileName = url.lastPathComponent
+            // 检查 fileNames 缓存
             if fileNames.contains(fileName) {
+                return
+            }
+            // 检查 items 中是否已有相同文件名的文件（原始文件）
+            if items.contains(where: { $0.url.lastPathComponent == fileName }) {
                 return
             }
             fileNames.insert(fileName)
         } else {
-            // 正常文件用 fileResourceIdentifier 比较
+            // 先用路径检查是否已存在（最可靠的方式）
+            let standardPath = url.standardizedFileURL.path
+            if items.contains(where: { $0.url.standardizedFileURL.path == standardPath }) {
+                return
+            }
+
+            // 再用 fileResourceIdentifier 加入缓存（用于后续快速查重）
             if let fileID = try? url.resourceValues(forKeys: [.fileResourceIdentifierKey]).fileResourceIdentifier {
                 let idString = "\(fileID)"
                 if fileIdentifiers.contains(idString) {

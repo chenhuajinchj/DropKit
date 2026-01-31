@@ -178,3 +178,132 @@ struct DraggableStackView: NSViewRepresentable {
         }
     }
 }
+
+// MARK: - 单文件拖拽 NSView
+
+/// 支持单文件拖拽的 NSView 包装器（用于展开视图中的 Grid/List Item）
+class DraggableItemNSView: NSView, NSDraggingSource {
+    var url: URL?
+    var thumbnail: NSImage?
+    private var isDragging = false
+    private var mouseDownLocation: NSPoint?
+
+    override init(frame frameRect: NSRect) {
+        super.init(frame: frameRect)
+        wantsLayer = true
+    }
+
+    required init?(coder: NSCoder) {
+        super.init(coder: coder)
+        wantsLayer = true
+    }
+
+    // MARK: - Mouse Events
+
+    override func mouseDown(with event: NSEvent) {
+        mouseDownLocation = event.locationInWindow
+        isDragging = false
+    }
+
+    override func mouseDragged(with event: NSEvent) {
+        guard !isDragging, let url = url else { return }
+
+        if let startLocation = mouseDownLocation {
+            let currentLocation = event.locationInWindow
+            let distance = hypot(currentLocation.x - startLocation.x, currentLocation.y - startLocation.y)
+            if distance < 5 { return }
+        }
+
+        isDragging = true
+        startDragging(with: event, url: url)
+    }
+
+    override func mouseUp(with event: NSEvent) {
+        isDragging = false
+        mouseDownLocation = nil
+    }
+
+    // MARK: - Dragging Source
+
+    private func startDragging(with event: NSEvent, url: URL) {
+        let draggingItem = NSDraggingItem(pasteboardWriter: url as NSURL)
+
+        let dragImage = createDragImage(for: url)
+        let imageSize = dragImage.size
+        let imageRect = NSRect(
+            x: bounds.midX - imageSize.width / 2,
+            y: bounds.midY - imageSize.height / 2,
+            width: imageSize.width,
+            height: imageSize.height
+        )
+        draggingItem.setDraggingFrame(imageRect, contents: dragImage)
+
+        beginDraggingSession(with: [draggingItem], event: event, source: self)
+    }
+
+    private func createDragImage(for url: URL) -> NSImage {
+        let size = NSSize(width: 60, height: 60)
+        let image = NSImage(size: size)
+        image.lockFocus()
+
+        let thumb: NSImage
+        if let t = thumbnail {
+            thumb = t
+        } else {
+            thumb = NSWorkspace.shared.icon(forFile: url.path)
+        }
+
+        let iconRect = NSRect(x: 0, y: 0, width: 60, height: 60)
+        thumb.draw(in: iconRect, from: .zero, operation: .sourceOver, fraction: 1.0)
+
+        image.unlockFocus()
+        return image
+    }
+
+    // MARK: - NSDraggingSource
+
+    func draggingSession(_ session: NSDraggingSession, sourceOperationMaskFor context: NSDraggingContext) -> NSDragOperation {
+        return context == .outsideApplication ? [.copy, .move] : .copy
+    }
+}
+
+/// 单文件拖拽的 SwiftUI 包装器
+struct DraggableItemView<Content: View>: NSViewRepresentable {
+    let url: URL
+    let thumbnail: NSImage?
+    let content: () -> Content
+
+    init(url: URL, thumbnail: NSImage? = nil, @ViewBuilder content: @escaping () -> Content) {
+        self.url = url
+        self.thumbnail = thumbnail
+        self.content = content
+    }
+
+    func makeNSView(context: Context) -> DraggableItemNSView {
+        let view = DraggableItemNSView()
+        view.url = url
+        view.thumbnail = thumbnail
+
+        let hostingView = NSHostingView(rootView: content())
+        hostingView.translatesAutoresizingMaskIntoConstraints = false
+        view.addSubview(hostingView)
+
+        NSLayoutConstraint.activate([
+            hostingView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            hostingView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            hostingView.topAnchor.constraint(equalTo: view.topAnchor),
+            hostingView.bottomAnchor.constraint(equalTo: view.bottomAnchor)
+        ])
+
+        return view
+    }
+
+    func updateNSView(_ nsView: DraggableItemNSView, context: Context) {
+        nsView.url = url
+        nsView.thumbnail = thumbnail
+
+        if let hostingView = nsView.subviews.first as? NSHostingView<Content> {
+            hostingView.rootView = content()
+        }
+    }
+}

@@ -334,6 +334,27 @@ struct GridItemView: View {
     }
 
     var body: some View {
+        DraggableItemView(url: item.url, thumbnail: item.thumbnail) {
+            gridItemContent
+        }
+        .contextMenu {
+            Button("在 Finder 中显示") {
+                viewModel.showInFinder(item)
+            }
+            Divider()
+            if isSelected && viewModel.selectedItemIds.count > 1 {
+                Button("删除选中的 \(viewModel.selectedItemIds.count) 个文件", role: .destructive) {
+                    viewModel.deleteSelected()
+                }
+            } else {
+                Button("删除", role: .destructive) {
+                    viewModel.removeItem(item)
+                }
+            }
+        }
+    }
+
+    private var gridItemContent: some View {
         VStack(spacing: 6) {
             // 缩略图
             ZStack(alignment: .topLeading) {
@@ -411,7 +432,24 @@ struct GridItemView: View {
         .onTapGesture {
             viewModel.toggleSelection(item.id, modifierFlags: NSEvent.modifierFlags)
         }
-        .draggable(item.url)
+    }
+}
+
+// MARK: - List Item View
+
+struct ListItemView: View {
+    let item: ShelfItem
+    var viewModel: ShelfViewModel
+    @State private var isHovered = false
+
+    private var isSelected: Bool {
+        viewModel.isSelected(item)
+    }
+
+    var body: some View {
+        DraggableItemView(url: item.url, thumbnail: item.thumbnail) {
+            listItemContent
+        }
         .contextMenu {
             Button("在 Finder 中显示") {
                 viewModel.showInFinder(item)
@@ -428,20 +466,8 @@ struct GridItemView: View {
             }
         }
     }
-}
 
-// MARK: - List Item View
-
-struct ListItemView: View {
-    let item: ShelfItem
-    var viewModel: ShelfViewModel
-    @State private var isHovered = false
-
-    private var isSelected: Bool {
-        viewModel.isSelected(item)
-    }
-
-    var body: some View {
+    private var listItemContent: some View {
         HStack(spacing: 10) {
             // 缩略图
             if let thumbnail = item.thumbnail {
@@ -507,22 +533,6 @@ struct ListItemView: View {
         }
         .onTapGesture {
             viewModel.toggleSelection(item.id, modifierFlags: NSEvent.modifierFlags)
-        }
-        .draggable(item.url)
-        .contextMenu {
-            Button("在 Finder 中显示") {
-                viewModel.showInFinder(item)
-            }
-            Divider()
-            if isSelected && viewModel.selectedItemIds.count > 1 {
-                Button("删除选中的 \(viewModel.selectedItemIds.count) 个文件", role: .destructive) {
-                    viewModel.deleteSelected()
-                }
-            } else {
-                Button("删除", role: .destructive) {
-                    viewModel.removeItem(item)
-                }
-            }
         }
     }
 }
