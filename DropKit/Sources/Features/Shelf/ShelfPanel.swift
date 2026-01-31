@@ -153,6 +153,8 @@ class ShelfPanel: NSPanel {
     func hidePanel() {
         stopClickMonitor()
         orderOut(nil)
+        // 隐藏时清空内容和缓存，为下一次使用做准备
+        viewModel.clearAll()
     }
 
     /// 点击 X 按钮：清空内容 + 关闭窗口
