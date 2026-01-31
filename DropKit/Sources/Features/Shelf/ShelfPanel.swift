@@ -82,33 +82,31 @@ class ShelfPanel: NSPanel {
     // MARK: - Dynamic Size
 
     private func observeViewState() {
-        // 使用 withObservationTracking 监听 viewModel 变化
-        Task { @MainActor in
-            var previousItemCount = viewModel.items.count
+        // 使用递归的 withObservationTracking 实现真正的事件驱动
+        func observe() {
+            withObservationTracking {
+                _ = viewModel.viewState
+                _ = viewModel.items.count
+            } onChange: {
+                Task { @MainActor [weak self] in
+                    guard let self = self else { return }
+                    self.updatePanelSize()
 
-            while !Task.isCancelled {
-                withObservationTracking {
-                    _ = viewModel.viewState
-                    _ = viewModel.items.count
-                } onChange: {
-                    Task { @MainActor in
-                        self.updatePanelSize()
-
-                        // 文件全部拖出后自动关闭
-                        if self.viewModel.items.isEmpty && self.isVisible {
-                            self.hidePanel()
-                        }
+                    // 文件全部拖出后自动关闭
+                    if self.viewModel.items.isEmpty && self.isVisible {
+                        self.hidePanel()
                     }
+
+                    // 继续监听下一次变化
+                    observe()
                 }
-
-                // 初始更新
-                updatePanelSize()
-                previousItemCount = viewModel.items.count
-
-                // 等待变化
-                try? await Task.sleep(nanoseconds: 100_000_000) // 0.1s
             }
         }
+
+        // 启动监听
+        observe()
+        // 初始更新
+        updatePanelSize()
     }
 
     private func updatePanelSize() {

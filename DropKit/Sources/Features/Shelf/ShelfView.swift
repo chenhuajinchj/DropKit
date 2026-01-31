@@ -1,4 +1,5 @@
 import SwiftUI
+import AppKit
 
 struct ShelfView: View {
     var viewModel: ShelfViewModel
@@ -192,6 +193,20 @@ struct ExpandedShelfView: View {
             }
         }
         .frame(width: 400, height: 300)
+        .onKeyPress(.delete) {
+            if !viewModel.selectedItemIds.isEmpty {
+                viewModel.deleteSelected()
+                return .handled
+            }
+            return .ignored
+        }
+        .onKeyPress(keys: [.init("a")]) { press in
+            if press.modifiers.contains(.command) {
+                viewModel.selectAll()
+                return .handled
+            }
+            return .ignored
+        }
     }
 
     private var navigationBar: some View {
@@ -313,6 +328,10 @@ struct GridItemView: View {
     var viewModel: ShelfViewModel
     @State private var isHovered = false
 
+    private var isSelected: Bool {
+        viewModel.isSelected(item)
+    }
+
     var body: some View {
         VStack(spacing: 6) {
             // 缩略图
@@ -334,20 +353,24 @@ struct GridItemView: View {
                         }
                 }
 
-                // 删除按钮
-                Button {
-                    viewModel.removeItem(item)
-                } label: {
-                    Image(systemName: "xmark")
-                        .font(.system(size: 8, weight: .bold))
-                        .foregroundStyle(.white)
-                        .frame(width: 16, height: 16)
-                        .background(Color.black.opacity(0.5))
-                        .clipShape(Circle())
+                // 删除按钮（右上角）
+                if isHovered && !isSelected {
+                    HStack {
+                        Spacer()
+                        Button {
+                            viewModel.removeItem(item)
+                        } label: {
+                            Image(systemName: "xmark")
+                                .font(.system(size: 8, weight: .bold))
+                                .foregroundStyle(.white)
+                                .frame(width: 16, height: 16)
+                                .background(Color.black.opacity(0.5))
+                                .clipShape(Circle())
+                        }
+                        .buttonStyle(.plain)
+                        .padding(4)
+                    }
                 }
-                .buttonStyle(.plain)
-                .padding(4)
-                .opacity(isHovered ? 1 : 0)
             }
 
             // 文件名
@@ -375,14 +398,17 @@ struct GridItemView: View {
         .padding(6)
         .background(
             RoundedRectangle(cornerRadius: 10)
-                .fill(isHovered ? Color.primary.opacity(0.08) : Color.clear)
+                .fill(isSelected ? Color.accentColor.opacity(0.08) : (isHovered ? Color.primary.opacity(0.08) : Color.clear))
         )
         .overlay(
             RoundedRectangle(cornerRadius: 10)
-                .stroke(isHovered ? Color.accentColor.opacity(0.5) : Color.clear, lineWidth: 2)
+                .stroke(isSelected ? Color.accentColor.opacity(0.5) : (isHovered ? Color.accentColor.opacity(0.5) : Color.clear), lineWidth: 2)
         )
         .onHover { hovering in
             isHovered = hovering
+        }
+        .onTapGesture {
+            viewModel.toggleSelection(item.id, modifierFlags: NSEvent.modifierFlags)
         }
         .draggable(item.url)
         .contextMenu {
@@ -390,8 +416,14 @@ struct GridItemView: View {
                 viewModel.showInFinder(item)
             }
             Divider()
-            Button("删除", role: .destructive) {
-                viewModel.removeItem(item)
+            if isSelected && viewModel.selectedItemIds.count > 1 {
+                Button("删除选中的 \(viewModel.selectedItemIds.count) 个文件", role: .destructive) {
+                    viewModel.deleteSelected()
+                }
+            } else {
+                Button("删除", role: .destructive) {
+                    viewModel.removeItem(item)
+                }
             }
         }
     }
@@ -403,6 +435,10 @@ struct ListItemView: View {
     let item: ShelfItem
     var viewModel: ShelfViewModel
     @State private var isHovered = false
+
+    private var isSelected: Bool {
+        viewModel.isSelected(item)
+    }
 
     var body: some View {
         HStack(spacing: 10) {
@@ -459,10 +495,17 @@ struct ListItemView: View {
         .padding(.vertical, 6)
         .background(
             RoundedRectangle(cornerRadius: 8)
-                .fill(isHovered ? Color.accentColor.opacity(0.15) : Color.primary.opacity(0.03))
+                .fill(isSelected ? Color.accentColor.opacity(0.1) : (isHovered ? Color.accentColor.opacity(0.08) : Color.primary.opacity(0.03)))
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 8)
+                .stroke(isSelected ? Color.accentColor.opacity(0.5) : Color.clear, lineWidth: 1.5)
         )
         .onHover { hovering in
             isHovered = hovering
+        }
+        .onTapGesture {
+            viewModel.toggleSelection(item.id, modifierFlags: NSEvent.modifierFlags)
         }
         .draggable(item.url)
         .contextMenu {
@@ -470,8 +513,14 @@ struct ListItemView: View {
                 viewModel.showInFinder(item)
             }
             Divider()
-            Button("删除", role: .destructive) {
-                viewModel.removeItem(item)
+            if isSelected && viewModel.selectedItemIds.count > 1 {
+                Button("删除选中的 \(viewModel.selectedItemIds.count) 个文件", role: .destructive) {
+                    viewModel.deleteSelected()
+                }
+            } else {
+                Button("删除", role: .destructive) {
+                    viewModel.removeItem(item)
+                }
             }
         }
     }

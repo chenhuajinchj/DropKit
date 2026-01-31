@@ -1,5 +1,6 @@
 import Foundation
 import AppKit
+import QuickLookThumbnailing
 
 enum ShelfViewState {
     case collapsed
@@ -17,6 +18,14 @@ class ShelfViewModel {
     var viewState: ShelfViewState = .collapsed
     var displayMode: DisplayMode = .grid
 
+    // 多选状态
+    var selectedItemIds: Set<UUID> = []
+    private var lastSelectedId: UUID?
+
+    // 用于快速查重的缓存
+    private var fileIdentifiers = Set<String>()
+    private var fileNames = Set<String>()  // 用于 SwiftUI 临时文件
+
     // MARK: - Item Management
 
     func addItem(url: URL) {
@@ -24,24 +33,24 @@ class ShelfViewModel {
         let isSwiftUIDragCache = url.path.contains("com.apple.SwiftUI.Drag")
 
         if isSwiftUIDragCache {
-            // 临时文件用文件名比较（因为是复制的文件，fileID 不同）
+            // 临时文件用文件名比较
             let fileName = url.lastPathComponent
-            if items.contains(where: { $0.name == fileName }) {
+            if fileNames.contains(fileName) {
                 return
             }
+            fileNames.insert(fileName)
         } else {
             // 正常文件用 fileResourceIdentifier 比较
-            if let newFileID = try? url.resourceValues(forKeys: [.fileResourceIdentifierKey]).fileResourceIdentifier {
-                for existingItem in items {
-                    if let existingFileID = try? existingItem.url.resourceValues(forKeys: [.fileResourceIdentifierKey]).fileResourceIdentifier,
-                       existingFileID.isEqual(newFileID) {
-                        return
-                    }
+            if let fileID = try? url.resourceValues(forKeys: [.fileResourceIdentifierKey]).fileResourceIdentifier {
+                let idString = "\(fileID)"
+                if fileIdentifiers.contains(idString) {
+                    return
                 }
+                fileIdentifiers.insert(idString)
             }
         }
 
-        var item = ShelfItem(url: url)
+        let item = ShelfItem(url: url)
         items.append(item)
         loadThumbnail(for: items.count - 1)
     }
@@ -53,6 +62,8 @@ class ShelfViewModel {
     }
 
     func removeItem(_ item: ShelfItem) {
+        // 从缓存中移除
+        removeFromCache(item.url)
         items.removeAll { $0.id == item.id }
         // 如果清空了，回到收起状态
         if items.isEmpty {
@@ -61,6 +72,9 @@ class ShelfViewModel {
     }
 
     func removeItems(byUrls urls: [URL]) {
+        for url in urls {
+            removeFromCache(url)
+        }
         let urlSet = Set(urls)
         items.removeAll { urlSet.contains($0.url) }
         if items.isEmpty {
@@ -70,14 +84,26 @@ class ShelfViewModel {
 
     func removeItem(at index: Int) {
         guard items.indices.contains(index) else { return }
+        removeFromCache(items[index].url)
         items.remove(at: index)
         if items.isEmpty {
             viewState = .collapsed
         }
     }
 
+    private func removeFromCache(_ url: URL) {
+        let isSwiftUIDragCache = url.path.contains("com.apple.SwiftUI.Drag")
+        if isSwiftUIDragCache {
+            fileNames.remove(url.lastPathComponent)
+        } else if let fileID = try? url.resourceValues(forKeys: [.fileResourceIdentifierKey]).fileResourceIdentifier {
+            fileIdentifiers.remove("\(fileID)")
+        }
+    }
+
     func clearAll() {
         items.removeAll()
+        fileIdentifiers.removeAll()
+        fileNames.removeAll()
         viewState = .collapsed
     }
 
@@ -134,12 +160,14 @@ class ShelfViewModel {
     private func loadThumbnail(for index: Int) {
         guard items.indices.contains(index) else { return }
         let item = items[index]
+        let itemId = item.id
 
         Task {
             let thumbnail = await generateThumbnail(for: item.url)
             await MainActor.run {
-                if self.items.indices.contains(index) && self.items[index].id == item.id {
-                    self.items[index].thumbnail = thumbnail
+                // 确保 item 还在且位置正确
+                if let currentIndex = self.items.firstIndex(where: { $0.id == itemId }) {
+                    self.items[currentIndex].thumbnail = thumbnail
                 }
             }
         }
@@ -148,40 +176,93 @@ class ShelfViewModel {
     private func generateThumbnail(for url: URL) async -> NSImage? {
         let size = CGSize(width: 120, height: 120)
 
-        return await withCheckedContinuation { continuation in
-            DispatchQueue.global(qos: .userInitiated).async {
-                let thumbnail = NSWorkspace.shared.icon(forFile: url.path)
-                thumbnail.size = size
+        // 使用新的 QLThumbnailGenerator API
+        let request = QLThumbnailGenerator.Request(
+            fileAt: url,
+            size: size,
+            scale: NSScreen.main?.backingScaleFactor ?? 2.0,
+            representationTypes: .thumbnail
+        )
 
-                // 对于图片文件，尝试生成实际缩略图
-                let ext = url.pathExtension.lowercased()
-                let imageExtensions = ["jpg", "jpeg", "png", "gif", "heic", "webp", "tiff", "bmp"]
-
-                if imageExtensions.contains(ext),
-                   let image = NSImage(contentsOf: url) {
-                    let resized = self.resizeImage(image, to: size)
-                    continuation.resume(returning: resized)
-                } else {
-                    continuation.resume(returning: thumbnail)
-                }
-            }
+        do {
+            let thumbnail = try await QLThumbnailGenerator.shared.generateBestRepresentation(for: request)
+            return NSImage(cgImage: thumbnail.cgImage, size: size)
+        } catch {
+            // 回退到系统图标
+            let icon = NSWorkspace.shared.icon(forFile: url.path)
+            icon.size = size
+            return icon
         }
-    }
-
-    private func resizeImage(_ image: NSImage, to size: CGSize) -> NSImage {
-        let newImage = NSImage(size: size)
-        newImage.lockFocus()
-        image.draw(in: NSRect(origin: .zero, size: size),
-                   from: NSRect(origin: .zero, size: image.size),
-                   operation: .copy,
-                   fraction: 1.0)
-        newImage.unlockFocus()
-        return newImage
     }
 
     // MARK: - Finder Integration
 
     func showInFinder(_ item: ShelfItem) {
         NSWorkspace.shared.activateFileViewerSelecting([item.url])
+    }
+
+    // MARK: - Selection Management
+
+    func isSelected(_ item: ShelfItem) -> Bool {
+        selectedItemIds.contains(item.id)
+    }
+
+    var selectedItems: [ShelfItem] {
+        items.filter { selectedItemIds.contains($0.id) }
+    }
+
+    var selectedUrls: [URL] {
+        selectedItems.map { $0.url }
+    }
+
+    func toggleSelection(_ itemId: UUID, modifierFlags: NSEvent.ModifierFlags) {
+        if modifierFlags.contains(.command) {
+            // Cmd+点击：切换单个选中状态
+            if selectedItemIds.contains(itemId) {
+                selectedItemIds.remove(itemId)
+            } else {
+                selectedItemIds.insert(itemId)
+            }
+            lastSelectedId = itemId
+        } else if modifierFlags.contains(.shift), let lastId = lastSelectedId {
+            // Shift+点击：范围选中
+            if let lastIndex = items.firstIndex(where: { $0.id == lastId }),
+               let currentIndex = items.firstIndex(where: { $0.id == itemId }) {
+                let range = min(lastIndex, currentIndex)...max(lastIndex, currentIndex)
+                for i in range {
+                    selectedItemIds.insert(items[i].id)
+                }
+            }
+        } else {
+            // 普通点击：单选
+            selectedItemIds.removeAll()
+            selectedItemIds.insert(itemId)
+            lastSelectedId = itemId
+        }
+    }
+
+    func selectAll() {
+        selectedItemIds = Set(items.map { $0.id })
+        lastSelectedId = items.last?.id
+    }
+
+    func deselectAll() {
+        selectedItemIds.removeAll()
+        lastSelectedId = nil
+    }
+
+    func deleteSelected() {
+        let idsToRemove = selectedItemIds
+        for id in idsToRemove {
+            if let item = items.first(where: { $0.id == id }) {
+                removeFromCache(item.url)
+            }
+        }
+        items.removeAll { idsToRemove.contains($0.id) }
+        selectedItemIds.removeAll()
+        lastSelectedId = nil
+        if items.isEmpty {
+            viewState = .collapsed
+        }
     }
 }
