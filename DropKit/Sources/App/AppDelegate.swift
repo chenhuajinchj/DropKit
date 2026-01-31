@@ -1,4 +1,5 @@
 import AppKit
+import KeyboardShortcuts
 
 class AppDelegate: NSObject, NSApplicationDelegate {
     var shelfPanel: ShelfPanel?
@@ -36,6 +37,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
         setupDragAndShake()
         setupMenuBar()
+        setupKeyboardShortcuts()
     }
 
     private func showPermissionGuide() {
@@ -66,6 +68,21 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         }
 
         menuBarController.setup()
+    }
+
+    private func setupKeyboardShortcuts() {
+        KeyboardShortcuts.onKeyUp(for: .showShelf) { [weak self] in
+            self?.shelfPanel?.center()
+            self?.shelfPanel?.showPanel()
+        }
+
+        KeyboardShortcuts.onKeyUp(for: .showClipboardHistory) { [weak self] in
+            self?.clipboardHistoryPanel?.showPanel()
+        }
+
+        KeyboardShortcuts.onKeyUp(for: .showSettings) { [weak self] in
+            self?.settingsWindowController.showSettings()
+        }
     }
 
     private func setupDragAndShake() {

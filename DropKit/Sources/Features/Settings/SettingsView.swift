@@ -1,4 +1,5 @@
 import SwiftUI
+import KeyboardShortcuts
 
 struct SettingsView: View {
     @Bindable var settings = AppSettings.shared
@@ -19,8 +20,13 @@ struct SettingsView: View {
                 .tabItem {
                     Label("剪切板", systemImage: "clipboard")
                 }
+
+            shortcutsTab
+                .tabItem {
+                    Label("快捷键", systemImage: "keyboard")
+                }
         }
-        .frame(width: 400, height: 250)
+        .frame(width: 400, height: 280)
     }
 
     private var generalTab: some View {
@@ -50,6 +56,15 @@ struct SettingsView: View {
     private var clipboardTab: some View {
         Form {
             Stepper("最大历史条数: \(settings.clipboardMaxItems)", value: $settings.clipboardMaxItems, in: 10...200, step: 10)
+        }
+        .padding()
+    }
+
+    private var shortcutsTab: some View {
+        Form {
+            KeyboardShortcuts.Recorder("显示悬浮窗:", name: .showShelf)
+            KeyboardShortcuts.Recorder("剪切板历史:", name: .showClipboardHistory)
+            KeyboardShortcuts.Recorder("设置:", name: .showSettings)
         }
         .padding()
     }
