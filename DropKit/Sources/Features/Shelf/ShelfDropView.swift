@@ -89,6 +89,10 @@ class ShelfDropView: NSView {
             return false
         }
         onDrop?(urls)
+
+        // 拖入文件后让窗口获得焦点，这样可以直接移动窗口
+        window?.makeKey()
+
         return true
     }
 }
