@@ -190,25 +190,26 @@ class ShelfPanel: NSPanel {
 
         let screenFrame = screen.visibleFrame
         let windowCenter = frame.midX
+        let edgePadding: CGFloat = 16  // 距离屏幕边缘的间距
 
         // 判断窗口在屏幕左半边还是右半边
         let screenCenter = screenFrame.midX
         let dockToLeft = windowCenter < screenCenter
 
-        // 计算目标位置（保持 Y 坐标不变）
+        // 计算目标位置（保持 Y 坐标不变，添加边距）
         let targetX: CGFloat
         if dockToLeft {
-            targetX = screenFrame.minX
+            targetX = screenFrame.minX + edgePadding
         } else {
-            targetX = screenFrame.maxX - frame.width
+            targetX = screenFrame.maxX - frame.width - edgePadding
         }
 
         let targetFrame = NSRect(x: targetX, y: frame.origin.y, width: frame.width, height: frame.height)
 
-        // 用 setFrame 动画滑动到边缘
+        // 用 setFrame 动画滑动到边缘（使用更平滑的缓动曲线）
         NSAnimationContext.runAnimationGroup { context in
-            context.duration = 0.25
-            context.timingFunction = CAMediaTimingFunction(name: .easeOut)
+            context.duration = 0.3
+            context.timingFunction = CAMediaTimingFunction(controlPoints: 0.25, 0.1, 0.25, 1.0)  // 类似 CSS ease-out-cubic
             context.allowsImplicitAnimation = true
             self.setFrame(targetFrame, display: true, animate: true)
         }
