@@ -97,6 +97,7 @@ struct CollapsedShelfView: View {
     private var stackedThumbnailsView: some View {
         DraggableStackView(
             urls: viewModel.items.map { $0.url },
+            thumbnails: viewModel.items.map { $0.thumbnail },
             onTap: { viewModel.expand() },
             onFilesMovedOut: { movedUrls in
                 viewModel.removeItems(byUrls: movedUrls)

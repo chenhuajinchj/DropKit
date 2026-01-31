@@ -4,6 +4,7 @@ import SwiftUI
 /// 支持多文件拖拽的 NSView 包装器
 class DraggableStackNSView: NSView, NSDraggingSource {
     var urls: [URL] = []
+    var thumbnails: [NSImage?] = []
     var onTap: (() -> Void)?
     var onFilesMovedOut: (([URL]) -> Void)?
     private var isDragging = false
@@ -79,28 +80,23 @@ class DraggableStackNSView: NSView, NSDraggingSource {
     }
 
     private func createDragImage() -> NSImage {
-        let size = NSSize(width: 100, height: 100)
+        let size = NSSize(width: 80, height: 80)
         let image = NSImage(size: size)
         image.lockFocus()
 
-        // 绘制简单的文件图标
-        let iconRect = NSRect(x: 10, y: 10, width: 80, height: 80)
-        NSColor.controlBackgroundColor.setFill()
-        let path = NSBezierPath(roundedRect: iconRect, xRadius: 8, yRadius: 8)
-        path.fill()
+        // 获取缩略图或系统图标
+        let thumbnail: NSImage
+        if let firstThumb = thumbnails.first ?? nil {
+            thumbnail = firstThumb
+        } else if let firstUrl = urls.first {
+            thumbnail = NSWorkspace.shared.icon(forFile: firstUrl.path)
+        } else {
+            thumbnail = NSImage(systemSymbolName: "doc", accessibilityDescription: nil) ?? NSImage()
+        }
 
-        // 绘制文件数量
-        let countString = "\(urls.count)"
-        let attributes: [NSAttributedString.Key: Any] = [
-            .font: NSFont.systemFont(ofSize: 24, weight: .bold),
-            .foregroundColor: NSColor.labelColor
-        ]
-        let textSize = countString.size(withAttributes: attributes)
-        let textPoint = NSPoint(
-            x: iconRect.midX - textSize.width / 2,
-            y: iconRect.midY - textSize.height / 2
-        )
-        countString.draw(at: textPoint, withAttributes: attributes)
+        // 绘制缩略图
+        let iconRect = NSRect(x: 0, y: 0, width: 80, height: 80)
+        thumbnail.draw(in: iconRect, from: .zero, operation: .sourceOver, fraction: 1.0)
 
         image.unlockFocus()
         return image
@@ -135,12 +131,14 @@ class DraggableStackNSView: NSView, NSDraggingSource {
 /// SwiftUI 包装器
 struct DraggableStackView: NSViewRepresentable {
     let urls: [URL]
+    let thumbnails: [NSImage?]
     let onTap: () -> Void
     let onFilesMovedOut: (([URL]) -> Void)?
     let content: () -> AnyView
 
-    init(urls: [URL], onTap: @escaping () -> Void, onFilesMovedOut: (([URL]) -> Void)? = nil, content: @escaping () -> AnyView) {
+    init(urls: [URL], thumbnails: [NSImage?], onTap: @escaping () -> Void, onFilesMovedOut: (([URL]) -> Void)? = nil, content: @escaping () -> AnyView) {
         self.urls = urls
+        self.thumbnails = thumbnails
         self.onTap = onTap
         self.onFilesMovedOut = onFilesMovedOut
         self.content = content
@@ -149,6 +147,7 @@ struct DraggableStackView: NSViewRepresentable {
     func makeNSView(context: Context) -> DraggableStackNSView {
         let view = DraggableStackNSView()
         view.urls = urls
+        view.thumbnails = thumbnails
         view.onTap = onTap
         view.onFilesMovedOut = onFilesMovedOut
 
@@ -169,6 +168,7 @@ struct DraggableStackView: NSViewRepresentable {
 
     func updateNSView(_ nsView: DraggableStackNSView, context: Context) {
         nsView.urls = urls
+        nsView.thumbnails = thumbnails
         nsView.onTap = onTap
         nsView.onFilesMovedOut = onFilesMovedOut
 
