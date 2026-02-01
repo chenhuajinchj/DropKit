@@ -177,7 +177,9 @@ class ClipboardMonitor {
             items = try JSONDecoder().decode([ClipboardItem].self, from: data)
             cleanupExpiredItems()
         } catch {
+            #if DEBUG
             print("Failed to load clipboard history: \(error)")
+            #endif
         }
     }
 
@@ -189,7 +191,9 @@ class ClipboardMonitor {
                 let data = try JSONEncoder().encode(itemsToSave)
                 try data.write(to: url, options: .atomic)
             } catch {
+                #if DEBUG
                 print("Failed to save clipboard history: \(error)")
+                #endif
             }
         }
     }

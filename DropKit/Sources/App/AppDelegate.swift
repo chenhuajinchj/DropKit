@@ -53,8 +53,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     private func setupMenuBar() {
         menuBarController.onShowShelf = { [weak self] in
-            self?.shelfPanel?.center()
-            self?.shelfPanel?.showPanel()
+            self?.shelfPanel?.showAtSavedPositionOrCenter()
         }
 
         menuBarController.onShowClipboardHistory = { [weak self] in
@@ -74,8 +73,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     private func setupKeyboardShortcuts() {
         KeyboardShortcuts.onKeyUp(for: .showShelf) { [weak self] in
-            self?.shelfPanel?.center()
-            self?.shelfPanel?.showPanel()
+            self?.shelfPanel?.showAtSavedPositionOrCenter()
         }
 
         KeyboardShortcuts.onKeyUp(for: .showClipboardHistory) { [weak self] in
@@ -164,8 +162,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
         // 自动显示悬浮窗
         if settings.autoShowShelfOnNewFile {
-            shelfPanel?.center()
-            shelfPanel?.showPanel()
+            shelfPanel?.showAtSavedPositionOrCenter()
         }
     }
 

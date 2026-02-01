@@ -6,6 +6,6 @@ class AppState {
     var isShelfVisible = false
 
     init() {
-        print("AppState initialized")
+        // AppState initialized
     }
 }

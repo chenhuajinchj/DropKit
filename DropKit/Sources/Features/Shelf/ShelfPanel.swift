@@ -7,6 +7,7 @@ class ShelfPanel: NSPanel {
     private var clickMonitor: Any?
     private var cancellables = Set<AnyCancellable>()
     private var isDocked = false
+    private var windowMoveObserver: Any?
 
     init() {
         super.init(
@@ -18,6 +19,7 @@ class ShelfPanel: NSPanel {
 
         setupPanel()
         observeViewState()
+        setupWindowMoveObserver()
     }
 
     private func setupPanel() {
@@ -149,8 +151,52 @@ class ShelfPanel: NSPanel {
 
     func showPanel() {
         isDocked = false
+
+        // 确保窗口有 layer
+        contentView?.wantsLayer = true
+        guard let layer = contentView?.layer else {
+            orderFront(nil)
+            startClickMonitor()
+            return
+        }
+
+        // 保存原始 anchorPoint 和 bounds
+        let bounds = layer.bounds
+        let oldAnchorPoint = layer.anchorPoint
+
+        // 设置锚点为中心（用于从中心缩放）
+        layer.anchorPoint = CGPoint(x: 0.5, y: 0.5)
+        // 调整 position 以补偿 anchorPoint 变化
+        layer.position = CGPoint(
+            x: layer.position.x + (0.5 - oldAnchorPoint.x) * bounds.width,
+            y: layer.position.y + (0.5 - oldAnchorPoint.y) * bounds.height
+        )
+
+        // 初始缩放为 0.3
+        layer.transform = CATransform3DMakeScale(0.3, 0.3, 1.0)
+
         orderFront(nil)
         startClickMonitor()
+
+        // 弹性动画
+        let springAnimation = CASpringAnimation(keyPath: "transform.scale")
+        springAnimation.fromValue = 0.3
+        springAnimation.toValue = 1.0
+        springAnimation.damping = 12  // 阻尼（越小弹跳越多）
+        springAnimation.stiffness = 300  // 刚度（越大越快）
+        springAnimation.mass = 1.0
+        springAnimation.initialVelocity = 0
+        springAnimation.duration = springAnimation.settlingDuration
+        springAnimation.fillMode = .forwards
+        springAnimation.isRemovedOnCompletion = false
+
+        CATransaction.begin()
+        CATransaction.setCompletionBlock {
+            layer.transform = CATransform3DIdentity
+            layer.removeAnimation(forKey: "springScale")
+        }
+        layer.add(springAnimation, forKey: "springScale")
+        CATransaction.commit()
     }
 
     func hidePanel() {
@@ -229,5 +275,44 @@ class ShelfPanel: NSPanel {
 
     deinit {
         stopClickMonitor()
+        if let observer = windowMoveObserver {
+            NotificationCenter.default.removeObserver(observer)
+        }
+    }
+
+    // MARK: - Window Position Memory
+
+    private func setupWindowMoveObserver() {
+        windowMoveObserver = NotificationCenter.default.addObserver(
+            forName: NSWindow.didMoveNotification,
+            object: self,
+            queue: .main
+        ) { [weak self] _ in
+            guard let self = self else { return }
+            AppSettings.shared.saveShelfPosition(self.frame.origin)
+        }
+    }
+
+    /// 在记忆位置显示（用于截图/菜单栏/快捷键触发）
+    func showAtSavedPositionOrCenter() {
+        if let savedPosition = AppSettings.shared.getSavedShelfPosition() {
+            // 验证位置是否在屏幕内
+            if let screen = NSScreen.main {
+                let screenFrame = screen.visibleFrame
+                var origin = savedPosition
+
+                // 确保窗口不超出屏幕边界
+                origin.x = max(screenFrame.minX, min(origin.x, screenFrame.maxX - frame.width))
+                origin.y = max(screenFrame.minY, min(origin.y, screenFrame.maxY - frame.height))
+
+                setFrameOrigin(origin)
+            } else {
+                setFrameOrigin(savedPosition)
+            }
+        } else {
+            // 没有保存的位置，使用屏幕中央
+            center()
+        }
+        showPanel()
     }
 }

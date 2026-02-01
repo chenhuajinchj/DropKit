@@ -1,4 +1,4 @@
-import Foundation
+import AppKit
 import ServiceManagement
 
 @Observable
@@ -48,6 +48,28 @@ class AppSettings {
         didSet { defaults.set(autoShowShelfOnNewFile, forKey: "autoShowShelfOnNewFile") }
     }
 
+    // 窗口位置记忆（仅用于截图/菜单栏/快捷键触发）
+    private(set) var shelfLastPositionX: Double {
+        didSet { defaults.set(shelfLastPositionX, forKey: "shelfLastPositionX") }
+    }
+    private(set) var shelfLastPositionY: Double {
+        didSet { defaults.set(shelfLastPositionY, forKey: "shelfLastPositionY") }
+    }
+
+    var hasSavedShelfPosition: Bool {
+        shelfLastPositionX >= 0 && shelfLastPositionY >= 0
+    }
+
+    func saveShelfPosition(_ origin: NSPoint) {
+        shelfLastPositionX = origin.x
+        shelfLastPositionY = origin.y
+    }
+
+    func getSavedShelfPosition() -> NSPoint? {
+        guard hasSavedShelfPosition else { return nil }
+        return NSPoint(x: shelfLastPositionX, y: shelfLastPositionY)
+    }
+
     private let defaults = UserDefaults.standard
 
     private init() {
@@ -79,6 +101,13 @@ class AppSettings {
         // autoCopyToClipboard 默认 true
         autoCopyToClipboard = defaults.object(forKey: "autoCopyToClipboard") == nil ? true : defaults.bool(forKey: "autoCopyToClipboard")
         autoShowShelfOnNewFile = defaults.bool(forKey: "autoShowShelfOnNewFile")
+
+        // 窗口位置记忆（-1 表示未保存）
+        let storedX = defaults.object(forKey: "shelfLastPositionX")
+        shelfLastPositionX = storedX != nil ? defaults.double(forKey: "shelfLastPositionX") : -1
+
+        let storedY = defaults.object(forKey: "shelfLastPositionY")
+        shelfLastPositionY = storedY != nil ? defaults.double(forKey: "shelfLastPositionY") : -1
     }
 
     private func updateLaunchAtLogin() {
