@@ -95,12 +95,14 @@ class DraggableStackNSView: NSView, NSDraggingSource {
         // 如果是移动操作，通知外部移除这些文件
         if operation == .move {
             let urlsToCheck = draggedUrls
-            // 延迟检查，确保文件系统操作完成
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
+            // 延迟检查，确保文件系统操作完成（在后台线程执行 I/O）
+            DispatchQueue.global(qos: .userInitiated).asyncAfter(deadline: .now() + 0.5) { [weak self] in
                 // 检查文件是否真的被移动了（原路径不存在）
                 let movedUrls = urlsToCheck.filter { !FileManager.default.fileExists(atPath: $0.path) }
                 if !movedUrls.isEmpty {
-                    self?.onFilesMovedOut?(movedUrls)
+                    DispatchQueue.main.async {
+                        self?.onFilesMovedOut?(movedUrls)
+                    }
                 }
             }
         }
@@ -267,12 +269,14 @@ class DraggableItemNSView: NSView, NSDraggingSource {
         // 如果是移动操作，通知外部移除这些文件
         if operation == .move {
             let urlsToCheck = draggedUrls
-            // 延迟检查，确保文件系统操作完成
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
+            // 延迟检查，确保文件系统操作完成（在后台线程执行 I/O）
+            DispatchQueue.global(qos: .userInitiated).asyncAfter(deadline: .now() + 0.5) { [weak self] in
                 // 检查文件是否真的被移动了（原路径不存在）
                 let movedUrls = urlsToCheck.filter { !FileManager.default.fileExists(atPath: $0.path) }
                 if !movedUrls.isEmpty {
-                    self?.onDragEnd?(movedUrls)
+                    DispatchQueue.main.async {
+                        self?.onDragEnd?(movedUrls)
+                    }
                 }
             }
         }

@@ -182,11 +182,15 @@ class ClipboardMonitor {
     }
 
     private func saveItems() {
-        do {
-            let data = try JSONEncoder().encode(items)
-            try data.write(to: storageURL)
-        } catch {
-            print("Failed to save clipboard history: \(error)")
+        let itemsToSave = items  // 捕获当前状态
+        let url = storageURL
+        Task.detached(priority: .utility) {
+            do {
+                let data = try JSONEncoder().encode(itemsToSave)
+                try data.write(to: url, options: .atomic)
+            } catch {
+                print("Failed to save clipboard history: \(error)")
+            }
         }
     }
 

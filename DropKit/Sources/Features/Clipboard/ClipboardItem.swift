@@ -43,10 +43,15 @@ struct ClipboardItem: Identifiable, Codable {
         }
     }
 
-    var relativeTime: String {
+    // 共享的日期格式化器，避免重复创建
+    private static let relativeDateFormatter: RelativeDateTimeFormatter = {
         let formatter = RelativeDateTimeFormatter()
         formatter.locale = Locale(identifier: "zh_CN")
         formatter.unitsStyle = .short
-        return formatter.localizedString(for: timestamp, relativeTo: Date())
+        return formatter
+    }()
+
+    var relativeTime: String {
+        Self.relativeDateFormatter.localizedString(for: timestamp, relativeTo: Date())
     }
 }

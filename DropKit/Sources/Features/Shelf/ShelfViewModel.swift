@@ -26,6 +26,9 @@ class ShelfViewModel {
     private var fileIdentifiers = Set<String>()
     private var fileNames = Set<String>()  // 用于 SwiftUI 临时文件
 
+    // 最大文件数限制，防止内存溢出
+    private let maxItems = 100
+
     // MARK: - Item Management
 
     func addItem(url: URL) {
@@ -64,6 +67,12 @@ class ShelfViewModel {
         let item = ShelfItem(url: url)
         items.append(item)
         loadThumbnail(for: items.count - 1)
+
+        // 超出限制时移除最早的项
+        while items.count > maxItems {
+            let removed = items.removeFirst()
+            removeFromCache(removed.url)
+        }
     }
 
     func addItems(urls: [URL]) {
