@@ -31,6 +31,9 @@ class ShelfPanel: NSPanel {
         isOpaque = false
         backgroundColor = .clear
 
+        // 添加窗口阴影
+        hasShadow = true
+
         // 不显示在 Dock 和 App Switcher
         hidesOnDeactivate = false
 

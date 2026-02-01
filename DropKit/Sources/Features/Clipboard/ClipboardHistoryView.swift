@@ -23,9 +23,12 @@ struct ClipboardHistoryView: View {
                         Button {
                             onClose?()
                         } label: {
-                            Image(systemName: "xmark.circle.fill")
-                                .font(.system(size: 14))
+                            Image(systemName: "xmark")
+                                .font(.system(size: 12, weight: .medium))
                                 .foregroundStyle(.secondary)
+                                .frame(width: 28, height: 28)
+                                .background(Color.primary.opacity(0.1))
+                                .clipShape(Circle())
                         }
                         .buttonStyle(.plain)
                         .padding(.trailing, 8)
@@ -257,11 +260,11 @@ struct ClipboardHistoryView: View {
                 .foregroundStyle(.green)
             Text("已复制到剪切板")
                 .font(.system(size: 12))
-                .foregroundStyle(.white)
+                .foregroundStyle(.primary)
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 8)
-        .background(Color.black.opacity(0.75))
+        .background(.regularMaterial)
         .clipShape(Capsule())
         .shadow(color: .black.opacity(0.15), radius: 4, y: 2)
     }
@@ -270,7 +273,7 @@ struct ClipboardHistoryView: View {
 
     private func previewOverlay(for item: ClipboardItem) -> some View {
         ZStack {
-            Color.white.opacity(0.4)
+            Color.clear
                 .background(.ultraThinMaterial)
                 .ignoresSafeArea()
                 .onTapGesture {

@@ -217,9 +217,9 @@ struct ExpandedShelfView: View {
                 viewModel.collapse()
             } label: {
                 Image(systemName: "chevron.left")
-                    .font(.system(size: 14, weight: .medium))
+                    .font(.system(size: 12, weight: .medium))
                     .foregroundStyle(.primary)
-                    .frame(width: 32, height: 32)
+                    .frame(width: 28, height: 28)
                     .background(Color.primary.opacity(0.1))
                     .clipShape(Circle())
             }
@@ -227,11 +227,23 @@ struct ExpandedShelfView: View {
 
             // 统计信息
             VStack(alignment: .leading, spacing: 2) {
-                Text(viewModel.itemCountDescription)
-                    .font(.headline)
-                Text(viewModel.formattedTotalSize)
+                if viewModel.selectedItemIds.isEmpty {
+                    Text(viewModel.itemCountDescription)
+                        .font(.headline)
+                    Text(viewModel.formattedTotalSize)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                } else {
+                    Text("已选择 \(viewModel.selectedItemIds.count) 个文件")
+                        .font(.headline)
+                        .foregroundStyle(Color.accentColor)
+                    Button("取消选择") {
+                        viewModel.deselectAll()
+                    }
                     .font(.caption)
+                    .buttonStyle(.plain)
                     .foregroundStyle(.secondary)
+                }
             }
 
             Spacer()
@@ -317,7 +329,7 @@ struct ExpandedShelfView: View {
                     ListItemView(item: item, viewModel: viewModel)
                 }
             }
-            .padding(12)
+            .padding(16)
         }
     }
 }
@@ -439,7 +451,7 @@ struct GridItemView: View {
         )
         .overlay(
             RoundedRectangle(cornerRadius: 10)
-                .stroke(isSelected ? Color.accentColor.opacity(0.5) : (isHovered ? Color.accentColor.opacity(0.5) : Color.clear), lineWidth: 2)
+                .stroke(isSelected ? Color.accentColor.opacity(0.6) : (isHovered ? Color.accentColor.opacity(0.3) : Color.clear), lineWidth: isSelected ? 2 : 1)
         )
         .onHover { hovering in
             isHovered = hovering
