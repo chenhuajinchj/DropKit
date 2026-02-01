@@ -10,6 +10,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     let clipboardMonitor = ClipboardMonitor.shared
     let menuBarController = MenuBarController()
     let settingsWindowController = SettingsWindowController()
+    let folderMonitor = FolderMonitor()
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         #if DEBUG
@@ -38,6 +39,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         setupDragAndShake()
         setupMenuBar()
         setupKeyboardShortcuts()
+        setupFolderMonitor()
     }
 
     private func showPermissionGuide() {
@@ -106,6 +108,73 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         dragMonitor.start()
     }
 
+    private func setupFolderMonitor() {
+        let settings = AppSettings.shared
+
+        // 设置新文件回调
+        folderMonitor.onNewFile = { [weak self] url in
+            self?.handleNewFile(url)
+        }
+
+        // 启动监听（如果已启用且有路径）
+        updateFolderMonitoring()
+
+        // 监听设置变化
+        observeSettingsChanges()
+    }
+
+    private func updateFolderMonitoring() {
+        let settings = AppSettings.shared
+
+        if settings.folderMonitorEnabled, let path = settings.watchedFolderPath, !path.isEmpty {
+            folderMonitor.start(path: path)
+        } else {
+            folderMonitor.stop()
+        }
+    }
+
+    private func observeSettingsChanges() {
+        let settings = AppSettings.shared
+
+        // 使用 withObservationTracking 监听设置变化
+        func observe() {
+            withObservationTracking {
+                _ = settings.folderMonitorEnabled
+                _ = settings.watchedFolderPath
+            } onChange: { [weak self] in
+                DispatchQueue.main.async {
+                    self?.updateFolderMonitoring()
+                    observe()
+                }
+            }
+        }
+        observe()
+    }
+
+    private func handleNewFile(_ url: URL) {
+        let settings = AppSettings.shared
+
+        // 添加到悬浮窗
+        shelfPanel?.viewModel.addItem(url: url)
+
+        // 自动复制到剪切板
+        if settings.autoCopyToClipboard {
+            copyFileToClipboard(url)
+        }
+
+        // 自动显示悬浮窗
+        if settings.autoShowShelfOnNewFile {
+            shelfPanel?.center()
+            shelfPanel?.showPanel()
+        }
+    }
+
+    private func copyFileToClipboard(_ url: URL) {
+        let pasteboard = NSPasteboard.general
+        pasteboard.clearContents()
+        pasteboard.writeObjects([url as NSURL])
+    }
+
     private func showShelfAtMouse() {
         guard let panel = shelfPanel,
               let screen = NSScreen.main else { return }
@@ -145,5 +214,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         dragMonitor.stop()
         shakeDetector.stop()
         clipboardMonitor.stop()
+        folderMonitor.stop()
     }
 }

@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		AAAA1111AAAA1111AAAA1111 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = AAAA2222AAAA2222AAAA2222 /* Assets.xcassets */; };
 		1A1A1A1A1A1A1A1A1A1A1A1A /* PermissionChecker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1B1B1B1B1B1B1B1B1B1B1B1B /* PermissionChecker.swift */; };
 		1C1C1C1C1C1C1C1C1C1C1C1C /* PermissionGuideView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D1D1D1D1D1D1D1D1D1D1D1D /* PermissionGuideView.swift */; };
 		1E1E1E1E1E1E1E1E1E1E1E1E /* PermissionGuideWindow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F1F1F1F1F1F1F1F1F1F1F1F /* PermissionGuideWindow.swift */; };
@@ -32,6 +33,7 @@
 		DAC81290E30B71F92EE032F9 /* ClipboardHistoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D6EDD5D2152DFF4CDE093CCF /* ClipboardHistoryView.swift */; };
 		FA4D571EB5406BA943E4742D /* AppState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27E1BD61D5A812E68EC0A3F3 /* AppState.swift */; };
 		6C6C6C6C6C6C6C6C6C6C6C6C /* KeyboardShortcuts in Frameworks */ = {isa = PBXBuildFile; productRef = 4B4B4B4B4B4B4B4B4B4B4B4B /* KeyboardShortcuts */; };
+		FM01FM01FM01FM01FM01FM01 /* FolderMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = FM02FM02FM02FM02FM02FM02 /* FolderMonitor.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -56,6 +58,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		AAAA2222AAAA2222AAAA2222 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		171699667EEE7CF874460560 /* DropKitTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = DropKitTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		17692C8058CA4C2A1B8560CB /* ClipboardMonitor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClipboardMonitor.swift; sourceTree = "<group>"; };
 		1B1B1B1B1B1B1B1B1B1B1B1B /* PermissionChecker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PermissionChecker.swift; sourceTree = "<group>"; };
@@ -84,6 +87,7 @@
 		E6E3630FD184F30CA1AB6751 /* MenuBarController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuBarController.swift; sourceTree = "<group>"; };
 		F00441888AE62FF9BB4E0B6B /* ShelfPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShelfPanel.swift; sourceTree = "<group>"; };
 		F60C94C7AFA978E8C515594E /* ShelfDropView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShelfDropView.swift; sourceTree = "<group>"; };
+		FM02FM02FM02FM02FM02FM02 /* FolderMonitor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FolderMonitor.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXGroup section */
@@ -184,9 +188,18 @@
 			isa = PBXGroup;
 			children = (
 				3DBBB908C3E3255B3EE0FEF8 /* Sources */,
+				AAAA3333AAAA3333AAAA3333 /* Resources */,
 				C6124BD17E0409BE95D44605 /* Tests */,
 				535E8D9727E1B80E76ED03CF /* Products */,
 			);
+			sourceTree = "<group>";
+		};
+		AAAA3333AAAA3333AAAA3333 /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				AAAA2222AAAA2222AAAA2222 /* Assets.xcassets */,
+			);
+			path = Resources;
 			sourceTree = "<group>";
 		};
 		C6124BD17E0409BE95D44605 /* Tests */ = {
@@ -220,12 +233,24 @@
 			children = (
 				17692C8058CA4C2A1B8560CB /* ClipboardMonitor.swift */,
 				A519ACF998BC7304C7A58983 /* DragMonitor.swift */,
+				FM02FM02FM02FM02FM02FM02 /* FolderMonitor.swift */,
 				D122D4B3DB99ACD2A0EAB3E7 /* ShakeDetector.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
+
+/* Begin PBXResourcesBuildPhase section */
+		AAAA4444AAAA4444AAAA4444 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				AAAA1111AAAA1111AAAA1111 /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
 
 /* Begin PBXNativeTarget section */
 		3B4DF3E10E001A4D98344C81 /* DropKitTests */ = {
@@ -252,6 +277,7 @@
 			buildPhases = (
 				6D3734715F38B15D956730AA /* Sources */,
 				7D7D7D7D7D7D7D7D7D7D7D7D /* Frameworks */,
+				AAAA4444AAAA4444AAAA4444 /* Resources */,
 			);
 			buildRules = (
 			);
@@ -325,6 +351,7 @@
 				3B3B3B3B3B3B3B3B3B3B3B3B /* DraggableStackView.swift in Sources */,
 				C0C79249225A62921C5D84E8 /* DragMonitor.swift in Sources */,
 				B1E9E1FC8D757F98DC7C7B87 /* DropKitApp.swift in Sources */,
+				FM01FM01FM01FM01FM01FM01 /* FolderMonitor.swift in Sources */,
 				5A5A5A5A5A5A5A5A5A5A5A5A /* KeyboardShortcutNames.swift in Sources */,
 				89FF5FA3B652E49B3193CB53 /* MenuBarController.swift in Sources */,
 				1A1A1A1A1A1A1A1A1A1A1A1A /* PermissionChecker.swift in Sources */,

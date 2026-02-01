@@ -5,6 +5,7 @@ struct SettingsView: View {
     @Bindable var settings = AppSettings.shared
     @State private var showDeleteConfirmation = false
     @State private var showDeleteSuccess = false
+    @State private var showFolderPicker = false
 
     var body: some View {
         TabView {
@@ -26,6 +27,11 @@ struct SettingsView: View {
             shortcutsTab
                 .tabItem {
                     Label("快捷键", systemImage: "keyboard")
+                }
+
+            folderMonitorTab
+                .tabItem {
+                    Label("文件夹监听", systemImage: "folder.badge.gearshape")
                 }
         }
         .frame(width: 400, height: 340)
@@ -140,5 +146,68 @@ struct SettingsView: View {
             KeyboardShortcuts.Recorder("设置:", name: .showSettings)
         }
         .padding()
+    }
+
+    private var folderMonitorTab: some View {
+        Form {
+            // 启用开关
+            Toggle("启用文件夹监听", isOn: $settings.folderMonitorEnabled)
+
+            Divider()
+
+            // 文件夹路径
+            VStack(alignment: .leading, spacing: 8) {
+                Text("监听文件夹")
+                    .font(.headline)
+
+                HStack {
+                    TextField("选择文件夹...", text: Binding(
+                        get: { settings.watchedFolderPath ?? "" },
+                        set: { settings.watchedFolderPath = $0.isEmpty ? nil : $0 }
+                    ))
+                    .textFieldStyle(.roundedBorder)
+                    .disabled(true)
+
+                    Button("选择...") {
+                        selectFolder()
+                    }
+                }
+
+                Button("使用 macOS 截图文件夹") {
+                    if let path = FolderMonitor.getScreenshotFolderPath() {
+                        settings.watchedFolderPath = path
+                    }
+                }
+                .font(.caption)
+            }
+
+            Divider()
+
+            // 行为选项
+            VStack(alignment: .leading, spacing: 8) {
+                Text("新文件行为")
+                    .font(.headline)
+
+                Toggle("自动复制到剪切板", isOn: $settings.autoCopyToClipboard)
+                Text("新文件出现时自动复制路径，可直接 Cmd+V 粘贴")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+
+                Toggle("自动显示悬浮窗", isOn: $settings.autoShowShelfOnNewFile)
+            }
+        }
+        .padding()
+    }
+
+    private func selectFolder() {
+        let panel = NSOpenPanel()
+        panel.canChooseFiles = false
+        panel.canChooseDirectories = true
+        panel.allowsMultipleSelection = false
+        panel.message = "选择要监听的文件夹"
+
+        if panel.runModal() == .OK, let url = panel.url {
+            settings.watchedFolderPath = url.path
+        }
     }
 }

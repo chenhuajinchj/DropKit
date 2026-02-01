@@ -34,6 +34,20 @@ class AppSettings {
         }
     }
 
+    // 文件夹监听
+    var folderMonitorEnabled: Bool {
+        didSet { defaults.set(folderMonitorEnabled, forKey: "folderMonitorEnabled") }
+    }
+    var watchedFolderPath: String? {
+        didSet { defaults.set(watchedFolderPath, forKey: "watchedFolderPath") }
+    }
+    var autoCopyToClipboard: Bool {
+        didSet { defaults.set(autoCopyToClipboard, forKey: "autoCopyToClipboard") }
+    }
+    var autoShowShelfOnNewFile: Bool {
+        didSet { defaults.set(autoShowShelfOnNewFile, forKey: "autoShowShelfOnNewFile") }
+    }
+
     private let defaults = UserDefaults.standard
 
     private init() {
@@ -58,6 +72,13 @@ class AppSettings {
         } else {
             launchAtLogin = defaults.bool(forKey: "launchAtLogin")
         }
+
+        // 文件夹监听设置
+        folderMonitorEnabled = defaults.bool(forKey: "folderMonitorEnabled")
+        watchedFolderPath = defaults.string(forKey: "watchedFolderPath")
+        // autoCopyToClipboard 默认 true
+        autoCopyToClipboard = defaults.object(forKey: "autoCopyToClipboard") == nil ? true : defaults.bool(forKey: "autoCopyToClipboard")
+        autoShowShelfOnNewFile = defaults.bool(forKey: "autoShowShelfOnNewFile")
     }
 
     private func updateLaunchAtLogin() {
@@ -69,7 +90,9 @@ class AppSettings {
                     try SMAppService.mainApp.unregister()
                 }
             } catch {
+                #if DEBUG
                 print("Failed to update launch at login: \(error)")
+                #endif
             }
         }
     }
