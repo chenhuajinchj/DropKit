@@ -25,6 +25,7 @@ struct ShelfItem: Identifiable {
     var fileSize: Int64
     var dimensions: CGSize?
     var fileType: FileType
+    var cachedFileIdentifier: String?  // 缓存文件标识符，避免重复 I/O
 
     init(url: URL) {
         self.url = url
@@ -34,6 +35,12 @@ struct ShelfItem: Identifiable {
         self.dimensions = nil
         // 快速判断文件类型（仅基于扩展名，不读取文件）
         self.fileType = Self.determineFileType(from: url)
+        // 缓存文件标识符（用于查重和移除缓存）
+        if let fileID = try? url.resourceValues(forKeys: [.fileResourceIdentifierKey]).fileResourceIdentifier {
+            self.cachedFileIdentifier = "\(fileID)"
+        } else {
+            self.cachedFileIdentifier = nil
+        }
     }
 
     /// 仅基于扩展名判断文件类型（同步，快速）
@@ -54,28 +61,30 @@ struct ShelfItem: Identifiable {
         }
     }
 
-    /// 异步加载文件详细信息（文件大小、图片尺寸）
+    /// 异步加载文件详细信息（文件大小、图片尺寸），在后台线程执行 I/O
     static func loadFileInfo(for url: URL, fileType: FileType) async -> (fileSize: Int64, dimensions: CGSize?) {
-        var fileSize: Int64 = 0
-        var dimensions: CGSize? = nil
+        await Task.detached(priority: .utility) {
+            var fileSize: Int64 = 0
+            var dimensions: CGSize? = nil
 
-        // 获取文件大小
-        if let attrs = try? FileManager.default.attributesOfItem(atPath: url.path),
-           let size = attrs[.size] as? Int64 {
-            fileSize = size
-        }
-
-        // 获取图片尺寸（仅图片类型）
-        if fileType == .image {
-            if let imageSource = CGImageSourceCreateWithURL(url as CFURL, nil),
-               let properties = CGImageSourceCopyPropertiesAtIndex(imageSource, 0, nil) as? [String: Any],
-               let width = properties[kCGImagePropertyPixelWidth as String] as? Int,
-               let height = properties[kCGImagePropertyPixelHeight as String] as? Int {
-                dimensions = CGSize(width: width, height: height)
+            // 获取文件大小
+            if let attrs = try? FileManager.default.attributesOfItem(atPath: url.path),
+               let size = attrs[.size] as? Int64 {
+                fileSize = size
             }
-        }
 
-        return (fileSize, dimensions)
+            // 获取图片尺寸（仅图片类型）
+            if fileType == .image {
+                if let imageSource = CGImageSourceCreateWithURL(url as CFURL, nil),
+                   let properties = CGImageSourceCopyPropertiesAtIndex(imageSource, 0, nil) as? [String: Any],
+                   let width = properties[kCGImagePropertyPixelWidth as String] as? Int,
+                   let height = properties[kCGImagePropertyPixelHeight as String] as? Int {
+                    dimensions = CGSize(width: width, height: height)
+                }
+            }
+
+            return (fileSize, dimensions)
+        }.value
     }
 
     // 格式化文件大小

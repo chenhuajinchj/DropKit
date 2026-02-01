@@ -71,7 +71,7 @@ class ShelfViewModel {
         // 超出限制时移除最早的项
         while items.count > maxItems {
             let removed = items.removeFirst()
-            removeFromCache(removed.url)
+            removeFromCache(removed)
         }
     }
 
@@ -83,7 +83,7 @@ class ShelfViewModel {
 
     func removeItem(_ item: ShelfItem) {
         // 从缓存中移除
-        removeFromCache(item.url)
+        removeFromCache(item)
         items.removeAll { $0.id == item.id }
         // 如果清空了，回到收起状态
         if items.isEmpty {
@@ -104,7 +104,7 @@ class ShelfViewModel {
 
     func removeItem(at index: Int) {
         guard items.indices.contains(index) else { return }
-        removeFromCache(items[index].url)
+        removeFromCache(items[index])
         items.remove(at: index)
         if items.isEmpty {
             viewState = .collapsed
@@ -117,6 +117,16 @@ class ShelfViewModel {
             fileNames.remove(url.lastPathComponent)
         } else if let fileID = try? url.resourceValues(forKeys: [.fileResourceIdentifierKey]).fileResourceIdentifier {
             fileIdentifiers.remove("\(fileID)")
+        }
+    }
+
+    /// 使用缓存的标识符移除，避免重复 I/O
+    private func removeFromCache(_ item: ShelfItem) {
+        let isSwiftUIDragCache = item.url.path.contains("com.apple.SwiftUI.Drag")
+        if isSwiftUIDragCache {
+            fileNames.remove(item.url.lastPathComponent)
+        } else if let cachedId = item.cachedFileIdentifier {
+            fileIdentifiers.remove(cachedId)
         }
     }
 
@@ -287,7 +297,7 @@ class ShelfViewModel {
         let idsToRemove = selectedItemIds
         for id in idsToRemove {
             if let item = items.first(where: { $0.id == id }) {
-                removeFromCache(item.url)
+                removeFromCache(item)
             }
         }
         items.removeAll { idsToRemove.contains($0.id) }
