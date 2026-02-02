@@ -76,7 +76,7 @@ struct ClipboardHistoryView: View {
         .frame(width: 380, height: 520)
         .onKeyPress(.space) {
             if selectedItemId != nil {
-                showPreview = true
+                showPreview.toggle()
                 return .handled
             }
             return .ignored
@@ -273,53 +273,50 @@ struct ClipboardHistoryView: View {
 
     private func previewOverlay(for item: ClipboardItem) -> some View {
         ZStack {
-            Color.clear
-                .background(.ultraThinMaterial)
+            Color.black.opacity(0.3)
                 .ignoresSafeArea()
                 .onTapGesture {
                     showPreview = false
                 }
 
-            VStack(spacing: 12) {
+            VStack(spacing: 0) {
+                // 标题栏
                 HStack {
                     Text("内容预览")
-                        .font(.system(size: 16, weight: .semibold))
+                        .font(.system(size: 14, weight: .semibold))
                     Spacer()
+                    // 空格键提示
+                    Text("空格关闭")
+                        .font(.system(size: 11))
+                        .foregroundStyle(.secondary)
                 }
+                .padding(.horizontal, 16)
+                .padding(.vertical, 12)
+                .background(Color.primary.opacity(0.05))
 
+                // 内容区域 - 占满剩余空间
                 ScrollView {
                     previewContent(for: item)
-                        .padding(16)
                         .frame(maxWidth: .infinity, alignment: .leading)
-                        .background(Color.primary.opacity(0.03))
-                        .clipShape(RoundedRectangle(cornerRadius: 8))
                 }
-
-                Button {
-                    showPreview = false
-                } label: {
-                    Text("关闭")
-                        .font(.system(size: 13))
-                        .padding(.horizontal, 16)
-                        .padding(.vertical, 6)
-                        .background(Color.primary.opacity(0.1))
-                        .clipShape(Capsule())
-                }
-                .buttonStyle(.plain)
+                .padding(12)
             }
-            .padding(20)
-            .frame(width: 300, height: 280)
+            .frame(width: 340, height: 400)
             .background(.regularMaterial)
             .clipShape(RoundedRectangle(cornerRadius: 12))
-            .shadow(color: .black.opacity(0.2), radius: 20, y: 10)
+            .shadow(color: .black.opacity(0.3), radius: 20, y: 10)
         }
     }
 
     @ViewBuilder
     private func previewContent(for item: ClipboardItem) -> some View {
         switch item.type {
-        case .text, .html:
+        case .text:
             Text(item.content)
+                .font(.system(size: 13))
+                .textSelection(.enabled)
+        case .html:
+            Text(ClipboardItem.stripHTMLTags(from: item.content))
                 .font(.system(size: 13))
                 .textSelection(.enabled)
         case .file:

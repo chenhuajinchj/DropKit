@@ -37,7 +37,7 @@ struct ClipboardItem: Identifiable, Codable {
         }
     }
 
-    private static func stripHTMLTags(from html: String) -> String {
+    static func stripHTMLTags(from html: String) -> String {
         // 使用 NSAttributedString 解析 HTML 提取纯文本
         guard let data = html.data(using: .utf8),
               let attributedString = try? NSAttributedString(
