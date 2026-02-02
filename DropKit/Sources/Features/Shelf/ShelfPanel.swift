@@ -160,28 +160,30 @@ class ShelfPanel: NSPanel {
             return
         }
 
-        // 保存原始 anchorPoint 和 bounds
         let bounds = layer.bounds
-        let oldAnchorPoint = layer.anchorPoint
+        let centerX = bounds.width / 2
+        let centerY = bounds.height / 2
 
-        // 设置锚点为中心（用于从中心缩放）
-        layer.anchorPoint = CGPoint(x: 0.5, y: 0.5)
-        // 调整 position 以补偿 anchorPoint 变化
-        layer.position = CGPoint(
-            x: layer.position.x + (0.5 - oldAnchorPoint.x) * bounds.width,
-            y: layer.position.y + (0.5 - oldAnchorPoint.y) * bounds.height
-        )
+        // 使用组合变换实现从中心缩放（不改变 anchorPoint）
+        // 原理：先平移到中心 -> 缩放 -> 再平移回来
+        func makeScaleTransform(_ scale: CGFloat) -> CATransform3D {
+            var transform = CATransform3DIdentity
+            transform = CATransform3DTranslate(transform, centerX, centerY, 0)
+            transform = CATransform3DScale(transform, scale, scale, 1.0)
+            transform = CATransform3DTranslate(transform, -centerX, -centerY, 0)
+            return transform
+        }
 
         // 初始缩放为 0.3
-        layer.transform = CATransform3DMakeScale(0.3, 0.3, 1.0)
+        layer.transform = makeScaleTransform(0.3)
 
         orderFront(nil)
         startClickMonitor()
 
         // 弹性动画
-        let springAnimation = CASpringAnimation(keyPath: "transform.scale")
-        springAnimation.fromValue = 0.3
-        springAnimation.toValue = 1.0
+        let springAnimation = CASpringAnimation(keyPath: "transform")
+        springAnimation.fromValue = NSValue(caTransform3D: makeScaleTransform(0.3))
+        springAnimation.toValue = NSValue(caTransform3D: CATransform3DIdentity)
         springAnimation.damping = 12  // 阻尼（越小弹跳越多）
         springAnimation.stiffness = 300  // 刚度（越大越快）
         springAnimation.mass = 1.0
