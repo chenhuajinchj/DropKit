@@ -26,6 +26,9 @@ class ShelfViewModel {
     private var fileIdentifiers = Set<String>()
     private var fileNames = Set<String>()  // 用于 SwiftUI 临时文件
 
+    // 缩略图加载任务引用，用于取消
+    private var thumbnailTasks: [UUID: Task<Void, Never>] = [:]
+
     // 最大文件数限制，防止内存溢出
     private let maxItems = 100
 
@@ -82,6 +85,9 @@ class ShelfViewModel {
     }
 
     func removeItem(_ item: ShelfItem) {
+        // 取消缩略图加载任务
+        thumbnailTasks[item.id]?.cancel()
+        thumbnailTasks.removeValue(forKey: item.id)
         // 从缓存中移除
         removeFromCache(item)
         items.removeAll { $0.id == item.id }
@@ -131,6 +137,11 @@ class ShelfViewModel {
     }
 
     func clearAll() {
+        // 取消所有缩略图加载任务
+        for task in thumbnailTasks.values {
+            task.cancel()
+        }
+        thumbnailTasks.removeAll()
         items.removeAll()
         fileIdentifiers.removeAll()
         fileNames.removeAll()
@@ -192,13 +203,19 @@ class ShelfViewModel {
         let item = items[index]
         let itemId = item.id
 
-        Task {
+        // 取消之前的任务（如果存在）
+        thumbnailTasks[itemId]?.cancel()
+
+        let task = Task {
             // 并行加载缩略图和文件信息
             async let thumbnailTask = generateThumbnail(for: item.url)
             async let fileInfoTask = ShelfItem.loadFileInfo(for: item.url, fileType: item.fileType)
 
             let thumbnail = await thumbnailTask
             let fileInfo = await fileInfoTask
+
+            // 检查任务是否被取消
+            guard !Task.isCancelled else { return }
 
             await MainActor.run {
                 // 确保 item 还在且位置正确
@@ -207,8 +224,12 @@ class ShelfViewModel {
                     self.items[currentIndex].fileSize = fileInfo.fileSize
                     self.items[currentIndex].dimensions = fileInfo.dimensions
                 }
+                // 清理任务引用
+                self.thumbnailTasks.removeValue(forKey: itemId)
             }
         }
+
+        thumbnailTasks[itemId] = task
     }
 
     private func generateThumbnail(for url: URL) async -> NSImage? {
@@ -296,6 +317,9 @@ class ShelfViewModel {
     func deleteSelected() {
         let idsToRemove = selectedItemIds
         for id in idsToRemove {
+            // 取消缩略图加载任务
+            thumbnailTasks[id]?.cancel()
+            thumbnailTasks.removeValue(forKey: id)
             if let item = items.first(where: { $0.id == id }) {
                 removeFromCache(item)
             }

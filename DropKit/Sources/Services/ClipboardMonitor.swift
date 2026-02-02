@@ -1,4 +1,5 @@
 import AppKit
+import UniformTypeIdentifiers
 
 enum ClipboardFilterType: String, CaseIterable {
     case all = "全部"
@@ -12,12 +13,21 @@ enum ClipboardFilterType: String, CaseIterable {
 class ClipboardMonitor {
     static let shared = ClipboardMonitor()
 
-    private(set) var items: [ClipboardItem] = []
+    private(set) var items: [ClipboardItem] = [] {
+        didSet { _filteredItemsCache = nil }
+    }
     private var lastChangeCount: Int = 0
     private var timer: Timer?
 
-    var searchText: String = ""
-    var selectedFilter: ClipboardFilterType = .all
+    var searchText: String = "" {
+        didSet { _filteredItemsCache = nil }
+    }
+    var selectedFilter: ClipboardFilterType = .all {
+        didSet { _filteredItemsCache = nil }
+    }
+
+    // filteredItems 缓存
+    private var _filteredItemsCache: [ClipboardItem]?
 
     let maxItems: Int = 50
 
@@ -30,6 +40,10 @@ class ClipboardMonitor {
     }
 
     var filteredItems: [ClipboardItem] {
+        if let cache = _filteredItemsCache {
+            return cache
+        }
+
         var result = items
 
         switch selectedFilter {
@@ -44,6 +58,7 @@ class ClipboardMonitor {
             result = result.filter { $0.content.localizedCaseInsensitiveContains(searchText) }
         }
 
+        _filteredItemsCache = result
         return result
     }
 
@@ -125,8 +140,8 @@ class ClipboardMonitor {
         do {
             try data.write(to: fileURL)
 
-            // 生成缩略图
-            generateThumbnail(for: fileURL)
+            // 在后台生成缩略图，传递 data 避免重新加载
+            generateThumbnail(from: data, saveTo: fileURL)
 
             return fileURL.path
         } catch {
@@ -137,25 +152,59 @@ class ClipboardMonitor {
         }
     }
 
-    private func generateThumbnail(for imageURL: URL) {
-        guard let image = NSImage(contentsOf: imageURL) else { return }
+    private func generateThumbnail(from imageData: Data, saveTo imageURL: URL) {
+        // 在后台线程生成缩略图，避免阻塞主线程
+        Task.detached(priority: .utility) {
+            // 使用 CGImageSource 直接从 Data 创建，更高效
+            guard let imageSource = CGImageSourceCreateWithData(imageData as CFData, nil),
+                  let cgImage = CGImageSourceCreateImageAtIndex(imageSource, 0, nil) else {
+                return
+            }
 
-        let thumbSize = CGSize(width: 80, height: 80)
-        let thumbImage = NSImage(size: thumbSize)
+            let thumbSize = CGSize(width: 80, height: 80)
+            let scale = 2.0 // Retina
+            let pixelWidth = Int(thumbSize.width * scale)
+            let pixelHeight = Int(thumbSize.height * scale)
 
-        thumbImage.lockFocus()
-        let rect = NSRect(origin: .zero, size: thumbSize)
-        image.draw(in: rect, from: .zero, operation: .copy, fraction: 1.0)
-        thumbImage.unlockFocus()
+            // 使用 CGContext 替代 lockFocus（线程安全）
+            guard let context = CGContext(
+                data: nil,
+                width: pixelWidth,
+                height: pixelHeight,
+                bitsPerComponent: 8,
+                bytesPerRow: 0,
+                space: CGColorSpaceCreateDeviceRGB(),
+                bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+            ) else { return }
 
-        // 保存缩略图
-        let thumbFilename = imageURL.deletingPathExtension().lastPathComponent + "_thumb.png"
-        let thumbURL = imageURL.deletingLastPathComponent().appendingPathComponent(thumbFilename)
+            // 计算等比缩放
+            let imageSize = CGSize(width: cgImage.width, height: cgImage.height)
+            let widthRatio = thumbSize.width / imageSize.width
+            let heightRatio = thumbSize.height / imageSize.height
+            let ratio = max(widthRatio, heightRatio)
 
-        if let tiffData = thumbImage.tiffRepresentation,
-           let bitmap = NSBitmapImageRep(data: tiffData),
-           let pngData = bitmap.representation(using: .png, properties: [:]) {
-            try? pngData.write(to: thumbURL)
+            let scaledWidth = imageSize.width * ratio * scale
+            let scaledHeight = imageSize.height * ratio * scale
+            let x = (CGFloat(pixelWidth) - scaledWidth) / 2
+            let y = (CGFloat(pixelHeight) - scaledHeight) / 2
+
+            context.draw(cgImage, in: CGRect(x: x, y: y, width: scaledWidth, height: scaledHeight))
+
+            guard let thumbnailCGImage = context.makeImage() else { return }
+
+            // 保存缩略图
+            let thumbFilename = imageURL.deletingPathExtension().lastPathComponent + "_thumb.png"
+            let thumbURL = imageURL.deletingLastPathComponent().appendingPathComponent(thumbFilename)
+
+            guard let destination = CGImageDestinationCreateWithURL(
+                thumbURL as CFURL,
+                UTType.png.identifier as CFString,
+                1,
+                nil
+            ) else { return }
+
+            CGImageDestinationAddImage(destination, thumbnailCGImage, nil)
+            CGImageDestinationFinalize(destination)
         }
     }
 
