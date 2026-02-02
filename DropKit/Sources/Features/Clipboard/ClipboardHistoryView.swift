@@ -383,17 +383,23 @@ struct ClipboardItemRow: View {
 
     @State private var isHovered = false
     @State private var showCopied = false
+    @State private var cachedThumbnail: NSImage?
 
     var body: some View {
         HStack(spacing: 12) {
             // 左侧缩略图（图片类型或图片文件）
-            if item.isImageFile,
-               let nsImage = NSImage(contentsOfFile: item.type == .image ? item.content : item.content) {
-                Image(nsImage: nsImage)
-                    .resizable()
-                    .aspectRatio(contentMode: .fill)
-                    .frame(width: 40, height: 40)
-                    .clipShape(RoundedRectangle(cornerRadius: 4))
+            if item.isImageFile {
+                Group {
+                    if let thumbnail = cachedThumbnail {
+                        Image(nsImage: thumbnail)
+                            .resizable()
+                            .aspectRatio(contentMode: .fill)
+                    } else {
+                        Color.gray.opacity(0.2)
+                    }
+                }
+                .frame(width: 40, height: 40)
+                .clipShape(RoundedRectangle(cornerRadius: 4))
             }
 
             // 中间内容
@@ -480,6 +486,11 @@ struct ClipboardItemRow: View {
         }
         .onTapGesture {
             onSelect()
+        }
+        .onAppear {
+            if item.isImageFile, cachedThumbnail == nil {
+                cachedThumbnail = NSImage(contentsOfFile: item.content)
+            }
         }
     }
 }
