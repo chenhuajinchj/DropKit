@@ -25,13 +25,31 @@ struct ClipboardItem: Identifiable, Codable {
 
     var displayText: String {
         switch type {
-        case .text, .html:
+        case .text:
             return String(content.prefix(100)) + (content.count > 100 ? "..." : "")
+        case .html:
+            let plainText = Self.stripHTMLTags(from: content)
+            return String(plainText.prefix(100)) + (plainText.count > 100 ? "..." : "")
         case .file:
             return URL(fileURLWithPath: content).lastPathComponent
         case .image:
             return "图片"
         }
+    }
+
+    private static func stripHTMLTags(from html: String) -> String {
+        // 使用 NSAttributedString 解析 HTML 提取纯文本
+        guard let data = html.data(using: .utf8),
+              let attributedString = try? NSAttributedString(
+                  data: data,
+                  options: [.documentType: NSAttributedString.DocumentType.html,
+                            .characterEncoding: String.Encoding.utf8.rawValue],
+                  documentAttributes: nil
+              ) else {
+            // 降级方案：正则去除标签
+            return html.replacingOccurrences(of: "<[^>]+>", with: "", options: .regularExpression)
+        }
+        return attributedString.string.trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
     var icon: String {
