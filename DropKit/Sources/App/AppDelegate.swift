@@ -13,6 +13,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     let folderMonitor = FolderMonitor()
 
     func applicationDidFinishLaunching(_ notification: Notification) {
+        // 菜单栏必须无条件设置，确保用户始终可以访问设置和退出
+        setupMenuBar()
+
         #if DEBUG
         // 开发模式：跳过权限检查，直接启动
         setupApp()
@@ -37,7 +40,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         clipboardMonitor.start()
 
         setupDragAndShake()
-        setupMenuBar()
         setupKeyboardShortcuts()
         setupFolderMonitor()
     }
