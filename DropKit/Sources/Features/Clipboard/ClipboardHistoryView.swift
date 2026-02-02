@@ -444,12 +444,15 @@ struct ClipboardItemRow: View {
         .padding(.vertical, 10)
         .background(
             RoundedRectangle(cornerRadius: 6)
-                .fill(isSelected ? Color.accentColor.opacity(0.1) : (isHovered ? Color.primary.opacity(0.05) : Color.clear))
+                .fill(isSelected ? Color.accentColor.opacity(0.15) : Color.clear)
         )
         .contentShape(Rectangle())
         .onHover { hovering in
             withAnimation(.easeInOut(duration: 0.15)) {
                 isHovered = hovering
+            }
+            if hovering {
+                onSelect()
             }
         }
         .onTapGesture {
