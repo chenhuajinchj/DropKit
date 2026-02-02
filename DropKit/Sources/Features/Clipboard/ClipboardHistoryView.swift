@@ -489,7 +489,9 @@ struct ClipboardItemRow: View {
         }
         .onAppear {
             if item.isImageFile, cachedThumbnail == nil {
-                cachedThumbnail = NSImage(contentsOfFile: item.content)
+                ThumbnailCache.shared.thumbnail(for: item.content) { image in
+                    cachedThumbnail = image
+                }
             }
         }
     }

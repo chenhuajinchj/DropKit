@@ -124,12 +124,38 @@ class ClipboardMonitor {
 
         do {
             try data.write(to: fileURL)
+
+            // 生成缩略图
+            generateThumbnail(for: fileURL)
+
             return fileURL.path
         } catch {
             #if DEBUG
             print("Failed to save clipboard image: \(error)")
             #endif
             return nil
+        }
+    }
+
+    private func generateThumbnail(for imageURL: URL) {
+        guard let image = NSImage(contentsOf: imageURL) else { return }
+
+        let thumbSize = CGSize(width: 80, height: 80)
+        let thumbImage = NSImage(size: thumbSize)
+
+        thumbImage.lockFocus()
+        let rect = NSRect(origin: .zero, size: thumbSize)
+        image.draw(in: rect, from: .zero, operation: .copy, fraction: 1.0)
+        thumbImage.unlockFocus()
+
+        // 保存缩略图
+        let thumbFilename = imageURL.deletingPathExtension().lastPathComponent + "_thumb.png"
+        let thumbURL = imageURL.deletingLastPathComponent().appendingPathComponent(thumbFilename)
+
+        if let tiffData = thumbImage.tiffRepresentation,
+           let bitmap = NSBitmapImageRep(data: tiffData),
+           let pngData = bitmap.representation(using: .png, properties: [:]) {
+            try? pngData.write(to: thumbURL)
         }
     }
 
@@ -175,7 +201,12 @@ class ClipboardMonitor {
         }
 
         for file in files {
-            if !validPaths.contains(file.path) {
+            let path = file.path
+            // 检查是否是孤立的原图或缩略图
+            let isThumb = path.contains("_thumb.png")
+            let originalPath = isThumb ? path.replacingOccurrences(of: "_thumb.png", with: ".png") : path
+
+            if !validPaths.contains(originalPath) {
                 try? FileManager.default.removeItem(at: file)
             }
         }
