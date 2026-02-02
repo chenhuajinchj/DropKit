@@ -140,8 +140,8 @@ class ClipboardMonitor {
         do {
             try data.write(to: fileURL)
 
-            // 在后台生成缩略图，传递 data 避免重新加载
-            generateThumbnail(from: data, saveTo: fileURL)
+            // 在后台从文件生成缩略图（不传递 data，避免内存持有）
+            generateThumbnail(for: fileURL)
 
             return fileURL.path
         } catch {
@@ -152,47 +152,25 @@ class ClipboardMonitor {
         }
     }
 
-    private func generateThumbnail(from imageData: Data, saveTo imageURL: URL) {
-        // 在后台线程生成缩略图，避免阻塞主线程
+    private func generateThumbnail(for imageURL: URL) {
         Task.detached(priority: .utility) {
-            // 使用 CGImageSource 直接从 Data 创建，更高效
-            guard let imageSource = CGImageSourceCreateWithData(imageData as CFData, nil),
-                  let cgImage = CGImageSourceCreateImageAtIndex(imageSource, 0, nil) else {
+            let thumbSize = CGSize(width: 80, height: 80)
+            let scale = 2.0
+            let maxPixelSize = Int(max(thumbSize.width, thumbSize.height) * scale)
+
+            // 使用 CGImageSource 的缩略图功能，避免加载完整图像到内存
+            let options: [CFString: Any] = [
+                kCGImageSourceCreateThumbnailFromImageAlways: true,
+                kCGImageSourceCreateThumbnailWithTransform: true,
+                kCGImageSourceThumbnailMaxPixelSize: maxPixelSize,
+                kCGImageSourceShouldCacheImmediately: false
+            ]
+
+            guard let imageSource = CGImageSourceCreateWithURL(imageURL as CFURL, nil),
+                  let thumbnailCGImage = CGImageSourceCreateThumbnailAtIndex(imageSource, 0, options as CFDictionary) else {
                 return
             }
 
-            let thumbSize = CGSize(width: 80, height: 80)
-            let scale = 2.0 // Retina
-            let pixelWidth = Int(thumbSize.width * scale)
-            let pixelHeight = Int(thumbSize.height * scale)
-
-            // 使用 CGContext 替代 lockFocus（线程安全）
-            guard let context = CGContext(
-                data: nil,
-                width: pixelWidth,
-                height: pixelHeight,
-                bitsPerComponent: 8,
-                bytesPerRow: 0,
-                space: CGColorSpaceCreateDeviceRGB(),
-                bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
-            ) else { return }
-
-            // 计算等比缩放
-            let imageSize = CGSize(width: cgImage.width, height: cgImage.height)
-            let widthRatio = thumbSize.width / imageSize.width
-            let heightRatio = thumbSize.height / imageSize.height
-            let ratio = max(widthRatio, heightRatio)
-
-            let scaledWidth = imageSize.width * ratio * scale
-            let scaledHeight = imageSize.height * ratio * scale
-            let x = (CGFloat(pixelWidth) - scaledWidth) / 2
-            let y = (CGFloat(pixelHeight) - scaledHeight) / 2
-
-            context.draw(cgImage, in: CGRect(x: x, y: y, width: scaledWidth, height: scaledHeight))
-
-            guard let thumbnailCGImage = context.makeImage() else { return }
-
-            // 保存缩略图
             let thumbFilename = imageURL.deletingPathExtension().lastPathComponent + "_thumb.png"
             let thumbURL = imageURL.deletingLastPathComponent().appendingPathComponent(thumbFilename)
 
