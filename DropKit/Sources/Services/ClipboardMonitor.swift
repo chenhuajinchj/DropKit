@@ -54,6 +54,13 @@ class ClipboardMonitor {
         return dropkitDir.appendingPathComponent("clipboard_history.json")
     }
 
+    private var imagesDirectory: URL {
+        let appSupport = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
+        let imagesDir = appSupport.appendingPathComponent("DropKit/ClipboardImages", isDirectory: true)
+        try? FileManager.default.createDirectory(at: imagesDir, withIntermediateDirectories: true)
+        return imagesDir
+    }
+
     init() {
         loadItems()
     }
@@ -81,7 +88,14 @@ class ClipboardMonitor {
     }
 
     private func readClipboardItem(from pasteboard: NSPasteboard) -> ClipboardItem? {
-        // 优先检查文件
+        // 优先检查图片（截图等场景）
+        if let imageData = pasteboard.data(forType: .png) ?? pasteboard.data(forType: .tiff) {
+            if let imagePath = saveImageToFile(imageData) {
+                return ClipboardItem(type: .image, content: imagePath)
+            }
+        }
+
+        // 检查文件
         if let urls = pasteboard.readObjects(forClasses: [NSURL.self], options: nil) as? [URL],
            let url = urls.first, url.isFileURL {
             return ClipboardItem(type: .file, content: url.path)
@@ -97,12 +111,26 @@ class ClipboardMonitor {
             return ClipboardItem(type: .text, content: text)
         }
 
-        // 检查图片
-        if pasteboard.data(forType: .tiff) != nil || pasteboard.data(forType: .png) != nil {
-            return ClipboardItem(type: .image, content: "")
-        }
-
         return nil
+    }
+
+    private func saveImageToFile(_ data: Data) -> String? {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd_HH-mm-ss"
+        let timestamp = formatter.string(from: Date())
+        let uuid = UUID().uuidString.prefix(8)
+        let filename = "\(timestamp)_\(uuid).png"
+        let fileURL = imagesDirectory.appendingPathComponent(filename)
+
+        do {
+            try data.write(to: fileURL)
+            return fileURL.path
+        } catch {
+            #if DEBUG
+            print("Failed to save clipboard image: \(error)")
+            #endif
+            return nil
+        }
     }
 
     private func addItem(_ item: ClipboardItem) {
@@ -134,6 +162,23 @@ class ClipboardMonitor {
             nonFavorites = Array(nonFavorites.prefix(allowedNonFavorites))
             items = (favorites + nonFavorites).sorted { $0.timestamp > $1.timestamp }
         }
+
+        // 清理孤立的图片文件
+        cleanupOrphanedImages()
+    }
+
+    private func cleanupOrphanedImages() {
+        let validPaths = Set(items.filter { $0.type == .image }.map { $0.content })
+
+        guard let files = try? FileManager.default.contentsOfDirectory(at: imagesDirectory, includingPropertiesForKeys: nil) else {
+            return
+        }
+
+        for file in files {
+            if !validPaths.contains(file.path) {
+                try? FileManager.default.removeItem(at: file)
+            }
+        }
     }
 
     func copyToClipboard(_ item: ClipboardItem) {
@@ -147,7 +192,11 @@ class ClipboardMonitor {
             let url = URL(fileURLWithPath: item.content)
             pasteboard.writeObjects([url as NSURL])
         case .image:
-            break
+            if !item.content.isEmpty,
+               let imageData = try? Data(contentsOf: URL(fileURLWithPath: item.content)),
+               let image = NSImage(data: imageData) {
+                pasteboard.writeObjects([image])
+            }
         }
     }
 

@@ -33,7 +33,11 @@ struct ClipboardItem: Identifiable, Codable {
         case .file:
             return URL(fileURLWithPath: content).lastPathComponent
         case .image:
-            return "图片"
+            if content.isEmpty {
+                return "图片"
+            }
+            let url = URL(fileURLWithPath: content)
+            return url.lastPathComponent
         }
     }
 
@@ -59,6 +63,13 @@ struct ClipboardItem: Identifiable, Codable {
         case .image: return "photo"
         case .file: return "doc.fill"
         }
+    }
+
+    var isImageFile: Bool {
+        guard type == .file || type == .image else { return false }
+        if type == .image { return true }
+        let ext = URL(fileURLWithPath: content).pathExtension.lowercased()
+        return ["png", "jpg", "jpeg", "gif", "bmp", "tiff", "heic", "webp"].contains(ext)
     }
 
     // 共享的日期格式化器，避免重复创建

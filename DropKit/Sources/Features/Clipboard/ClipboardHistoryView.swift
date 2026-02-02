@@ -320,22 +320,38 @@ struct ClipboardHistoryView: View {
                 .font(.system(size: 13))
                 .textSelection(.enabled)
         case .file:
-            VStack(alignment: .leading, spacing: 8) {
-                Text(URL(fileURLWithPath: item.content).lastPathComponent)
-                    .font(.system(size: 14, weight: .medium))
-                Text(item.content)
-                    .font(.system(size: 11))
-                    .foregroundStyle(.secondary)
-                    .textSelection(.enabled)
+            if item.isImageFile,
+               let nsImage = NSImage(contentsOfFile: item.content) {
+                Image(nsImage: nsImage)
+                    .resizable()
+                    .aspectRatio(contentMode: .fit)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+            } else {
+                VStack(alignment: .leading, spacing: 8) {
+                    Text(URL(fileURLWithPath: item.content).lastPathComponent)
+                        .font(.system(size: 14, weight: .medium))
+                    Text(item.content)
+                        .font(.system(size: 11))
+                        .foregroundStyle(.secondary)
+                        .textSelection(.enabled)
+                }
             }
         case .image:
-            VStack {
-                Image(systemName: "photo")
-                    .font(.system(size: 32))
-                    .foregroundStyle(.secondary)
-                Text("图片预览暂不支持")
-                    .font(.system(size: 12))
-                    .foregroundStyle(.secondary)
+            if !item.content.isEmpty,
+               let nsImage = NSImage(contentsOfFile: item.content) {
+                Image(nsImage: nsImage)
+                    .resizable()
+                    .aspectRatio(contentMode: .fit)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+            } else {
+                VStack {
+                    Image(systemName: "photo")
+                        .font(.system(size: 32))
+                        .foregroundStyle(.secondary)
+                    Text("图片不可用")
+                        .font(.system(size: 12))
+                        .foregroundStyle(.secondary)
+                }
             }
         }
     }
@@ -370,6 +386,16 @@ struct ClipboardItemRow: View {
 
     var body: some View {
         HStack(spacing: 12) {
+            // 左侧缩略图（图片类型或图片文件）
+            if item.isImageFile,
+               let nsImage = NSImage(contentsOfFile: item.type == .image ? item.content : item.content) {
+                Image(nsImage: nsImage)
+                    .resizable()
+                    .aspectRatio(contentMode: .fill)
+                    .frame(width: 40, height: 40)
+                    .clipShape(RoundedRectangle(cornerRadius: 4))
+            }
+
             // 中间内容
             VStack(alignment: .leading, spacing: 2) {
                 HStack(spacing: 4) {
