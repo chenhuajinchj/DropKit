@@ -133,7 +133,7 @@ struct ClipboardHistoryView: View {
             .padding(.horizontal, 10)
             .padding(.vertical, 6)
             .background(Color.primary.opacity(0.05))
-            .clipShape(RoundedRectangle(cornerRadius: 8))
+            .clipShape(RoundedRectangle(cornerRadius: 10))
         }
         .padding(.horizontal, 16)
         .padding(.top, 12)
@@ -303,7 +303,7 @@ struct ClipboardHistoryView: View {
             }
             .frame(width: 340, height: 400)
             .background(.regularMaterial)
-            .clipShape(RoundedRectangle(cornerRadius: 12))
+            .clipShape(RoundedRectangle(cornerRadius: 10))
             .shadow(color: .black.opacity(0.3), radius: 20, y: 10)
         }
     }
