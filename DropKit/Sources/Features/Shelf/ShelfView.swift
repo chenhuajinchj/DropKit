@@ -205,6 +205,11 @@ struct ExpandedShelfView: View {
             } else {
                 listContentView
             }
+
+            Divider()
+
+            // 底部状态栏
+            statusBar
         }
         .frame(width: 400, height: 300)
         .onKeyPress(.delete) {
@@ -238,25 +243,16 @@ struct ExpandedShelfView: View {
             }
             .buttonStyle(.plain)
 
-            // 统计信息
-            VStack(alignment: .leading, spacing: 2) {
-                if viewModel.selectedItemIds.isEmpty {
-                    Text(viewModel.itemCountDescription)
-                        .font(.headline)
-                    Text(viewModel.formattedTotalSize)
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                } else {
-                    Text("已选择 \(viewModel.selectedItemIds.count) 个文件")
-                        .font(.headline)
-                        .foregroundStyle(Color.accentColor)
-                    Button("取消选择") {
-                        viewModel.deselectAll()
-                    }
-                    .font(.caption)
-                    .buttonStyle(.plain)
-                    .foregroundStyle(.secondary)
-                }
+            Spacer()
+
+            // 标题
+            if viewModel.selectedItemIds.isEmpty {
+                Text(viewModel.itemCountDescription)
+                    .font(.headline)
+            } else {
+                Text("已选择 \(viewModel.selectedItemIds.count) 个")
+                    .font(.headline)
+                    .foregroundStyle(Color.accentColor)
             }
 
             Spacer()
@@ -284,6 +280,29 @@ struct ExpandedShelfView: View {
         .padding(.vertical, 10)
     }
 
+    // MARK: - Status Bar
+
+    private var statusBar: some View {
+        HStack {
+            Text(viewModel.formattedTotalSize)
+                .font(.caption)
+                .foregroundStyle(.secondary)
+
+            Spacer()
+
+            if !viewModel.selectedItemIds.isEmpty {
+                Button("取消选择") {
+                    viewModel.deselectAll()
+                }
+                .font(.caption)
+                .buttonStyle(.plain)
+                .foregroundStyle(.secondary)
+            }
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 8)
+    }
+
     private func viewModeButton(mode: DisplayMode, icon: String) -> some View {
         Button {
             viewModel.displayMode = mode
@@ -307,30 +326,15 @@ struct ExpandedShelfView: View {
                     GridItemView(item: item, viewModel: viewModel)
                 }
 
-                // "在 Finder 中显示" 快捷操作
-                if let firstItem = viewModel.items.first {
-                    finderShortcut(for: firstItem)
-                }
+                // 垃圾桶删除区域
+                trashDropZone
             }
             .padding(16)
         }
     }
 
-    private func finderShortcut(for item: ShelfItem) -> some View {
-        Button {
-            viewModel.showInFinder(item)
-        } label: {
-            VStack(spacing: 8) {
-                Image(systemName: "arrow.up.forward.circle")
-                    .font(.system(size: 40))
-                    .foregroundStyle(.secondary)
-                Text("在 Finder 中显示")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-            }
-            .frame(width: 100, height: 120)
-        }
-        .buttonStyle(.plain)
+    private var trashDropZone: some View {
+        TrashDropZone(viewModel: viewModel)
     }
 
     // MARK: - List Content
@@ -588,6 +592,49 @@ struct ListItemView: View {
         }
         .onTapGesture {
             viewModel.toggleSelection(item.id, modifierFlags: NSEvent.modifierFlags)
+        }
+    }
+}
+
+// MARK: - Trash Drop Zone
+
+struct TrashDropZone: View {
+    var viewModel: ShelfViewModel
+    @State private var isTargeted = false
+
+    var body: some View {
+        VStack(spacing: 8) {
+            Image(systemName: isTargeted ? "trash.fill" : "trash")
+                .font(.system(size: 24))
+                .foregroundStyle(isTargeted ? .red : .secondary)
+            Text("拖此删除")
+                .font(.caption)
+                .foregroundStyle(isTargeted ? .red : .secondary)
+        }
+        .frame(width: 100, height: 120)
+        .background(
+            RoundedRectangle(cornerRadius: 8)
+                .strokeBorder(
+                    isTargeted ? Color.red : Color.secondary.opacity(0.3),
+                    style: StrokeStyle(lineWidth: 2, dash: [6, 4])
+                )
+        )
+        .background(
+            RoundedRectangle(cornerRadius: 8)
+                .fill(isTargeted ? Color.red.opacity(0.1) : Color.clear)
+        )
+        .onDrop(of: [.fileURL], isTargeted: $isTargeted) { providers in
+            // 删除拖入的文件
+            for provider in providers {
+                _ = provider.loadObject(ofClass: URL.self) { url, _ in
+                    if let url = url {
+                        DispatchQueue.main.async {
+                            viewModel.removeItems(byUrls: [url])
+                        }
+                    }
+                }
+            }
+            return true
         }
     }
 }
