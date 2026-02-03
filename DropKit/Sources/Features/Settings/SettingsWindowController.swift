@@ -17,7 +17,7 @@ class SettingsWindowController {
         let window = NSWindow(contentViewController: hostingController)
         window.title = "DropKit 设置"
         window.styleMask = [.titled, .closable]
-        window.setContentSize(NSSize(width: 400, height: 250))
+        window.setContentSize(NSSize(width: 400, height: 340))
         window.center()
         window.makeKeyAndOrderFront(nil)
 
