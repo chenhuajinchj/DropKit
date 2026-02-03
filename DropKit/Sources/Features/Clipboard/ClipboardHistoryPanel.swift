@@ -27,10 +27,10 @@ class ClipboardHistoryPanel: NSPanel {
         let visualEffect = NSVisualEffectView()
         visualEffect.translatesAutoresizingMaskIntoConstraints = false
         visualEffect.blendingMode = .behindWindow
-        visualEffect.material = .hudWindow
+        visualEffect.material = .menu
         visualEffect.state = .active
         visualEffect.wantsLayer = true
-        visualEffect.layer?.cornerRadius = 12
+        visualEffect.layer?.cornerRadius = 10
         visualEffect.layer?.masksToBounds = true
 
         contentView = NSView(frame: NSRect(x: 0, y: 0, width: 300, height: 400))

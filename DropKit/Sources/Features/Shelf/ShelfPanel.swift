@@ -53,7 +53,7 @@ class ShelfPanel: NSPanel {
         visualEffect.material = .hudWindow
         visualEffect.state = .active
         visualEffect.wantsLayer = true
-        visualEffect.layer?.cornerRadius = 12
+        visualEffect.layer?.cornerRadius = 10
         visualEffect.layer?.masksToBounds = true
 
         dropView.addSubview(visualEffect)
