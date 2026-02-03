@@ -15,3 +15,7 @@ Packages/
 
 # Claude Code
 .claude/
+
+# Release builds
+releases/
+release/
