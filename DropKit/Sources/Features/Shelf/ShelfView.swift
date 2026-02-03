@@ -52,19 +52,32 @@ struct CollapsedShelfView: View {
 
                 Spacer()
 
-                // 收起按钮（有文件时显示）
+                // 省略号菜单按钮（有文件时显示）
                 if !viewModel.items.isEmpty {
-                    Button {
-                        viewModel.expand()
+                    Menu {
+                        Button("展开查看全部") {
+                            viewModel.expand()
+                        }
+                        Divider()
+                        Button("在 Finder 中显示") {
+                            if let firstItem = viewModel.items.first {
+                                NSWorkspace.shared.activateFileViewerSelecting([firstItem.url])
+                            }
+                        }
+                        Divider()
+                        Button("清空所有", role: .destructive) {
+                            viewModel.clearAll()
+                        }
                     } label: {
-                        Image(systemName: "chevron.right")
+                        Image(systemName: "ellipsis")
                             .font(.system(size: 12, weight: .medium))
                             .foregroundStyle(.secondary)
-                            .frame(width: 28, height: 28)
-                            .background(Color.primary.opacity(0.1))
-                            .clipShape(Circle())
                     }
-                    .buttonStyle(.plain)
+                    .menuStyle(.borderlessButton)
+                    .menuIndicator(.hidden)
+                    .frame(width: 28, height: 28)
+                    .background(Color.primary.opacity(0.1))
+                    .clipShape(Circle())
                 } else {
                     Color.clear.frame(width: 28, height: 28)
                 }
