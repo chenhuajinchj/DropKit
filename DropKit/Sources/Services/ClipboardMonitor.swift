@@ -97,9 +97,29 @@ class ClipboardMonitor {
         guard pasteboard.changeCount != lastChangeCount else { return }
         lastChangeCount = pasteboard.changeCount
 
+        // 检查是否应该忽略此内容
+        if shouldIgnoreClipboard(pasteboard) {
+            return
+        }
+
         if let item = readClipboardItem(from: pasteboard) {
             addItem(item)
         }
+    }
+
+    /// 检查是否应该忽略当前剪切板内容（密码管理器或黑名单应用）
+    private func shouldIgnoreClipboard(_ pasteboard: NSPasteboard) -> Bool {
+        // 1. 检查应用黑名单
+        if let frontApp = NSWorkspace.shared.frontmostApplication,
+           let bundleId = frontApp.bundleIdentifier,
+           AppSettings.shared.isBlacklisted(bundleId) {
+            return true
+        }
+
+        // 2. 检查密码管理器（Concealed Type）
+        guard AppSettings.shared.ignoreConcealed else { return false }
+        let concealedType = NSPasteboard.PasteboardType("org.nspasteboard.ConcealedType")
+        return pasteboard.types?.contains(concealedType) == true
     }
 
     private func readClipboardItem(from pasteboard: NSPasteboard) -> ClipboardItem? {
@@ -255,6 +275,22 @@ class ClipboardMonitor {
                let image = NSImage(data: imageData) {
                 pasteboard.writeObjects([image])
             }
+        }
+    }
+
+    /// 以纯文本方式复制到剪切板（去除 HTML 格式）
+    func copyAsPlainText(_ item: ClipboardItem) {
+        let pasteboard = NSPasteboard.general
+        pasteboard.clearContents()
+
+        switch item.type {
+        case .html:
+            let plainText = ClipboardItem.stripHTMLTags(from: item.content)
+            pasteboard.setString(plainText, forType: .string)
+        case .text:
+            pasteboard.setString(item.content, forType: .string)
+        case .file, .image:
+            copyToClipboard(item)  // 回退到普通复制
         }
     }
 

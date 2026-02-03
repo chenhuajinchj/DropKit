@@ -6,6 +6,7 @@ struct SettingsView: View {
     @State private var showDeleteConfirmation = false
     @State private var showDeleteSuccess = false
     @State private var showFolderPicker = false
+    @State private var showAppPicker = false
 
     var body: some View {
         TabView {
@@ -34,7 +35,7 @@ struct SettingsView: View {
                     Label("文件夹监听", systemImage: "folder.badge.gearshape")
                 }
         }
-        .frame(width: 400, height: 340)
+        .frame(width: 420, height: 420)
     }
 
     private var generalTab: some View {
@@ -99,6 +100,54 @@ struct SettingsView: View {
 
             Divider()
 
+            // 忽略密码管理器内容
+            VStack(alignment: .leading, spacing: 4) {
+                Toggle("忽略密码管理器内容", isOn: $settings.ignoreConcealed)
+                Text("自动跳过来自 1Password、LastPass 等的复制内容")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+            }
+
+            Divider()
+
+            // 应用黑名单
+            VStack(alignment: .leading, spacing: 8) {
+                Toggle("启用应用黑名单", isOn: $settings.clipboardBlacklistEnabled)
+                Text("忽略来自指定应用的剪切板内容")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+
+                if settings.clipboardBlacklistEnabled && !settings.clipboardBlacklist.isEmpty {
+                    ForEach(Array(settings.clipboardBlacklist).sorted(), id: \.self) { bundleId in
+                        HStack {
+                            if let appName = getAppName(for: bundleId) {
+                                Text(appName)
+                                    .font(.callout)
+                            } else {
+                                Text(bundleId)
+                                    .font(.callout)
+                            }
+                            Spacer()
+                            Button {
+                                settings.clipboardBlacklist.remove(bundleId)
+                            } label: {
+                                Image(systemName: "minus.circle.fill")
+                                    .foregroundColor(.red)
+                            }
+                            .buttonStyle(.plain)
+                        }
+                    }
+                }
+
+                if settings.clipboardBlacklistEnabled {
+                    Button("添加应用...") {
+                        showAppPicker = true
+                    }
+                }
+            }
+
+            Divider()
+
             // 删除历史记录按钮
             HStack {
                 Spacer()
@@ -137,6 +186,16 @@ struct SettingsView: View {
         } message: {
             Text("确定要删除所有剪切板历史记录吗？此操作无法撤销。")
         }
+        .sheet(isPresented: $showAppPicker) {
+            AppPickerView(selectedBundleIds: $settings.clipboardBlacklist)
+        }
+    }
+
+    private func getAppName(for bundleId: String) -> String? {
+        if let appURL = NSWorkspace.shared.urlForApplication(withBundleIdentifier: bundleId) {
+            return FileManager.default.displayName(atPath: appURL.path)
+        }
+        return nil
     }
 
     private var shortcutsTab: some View {

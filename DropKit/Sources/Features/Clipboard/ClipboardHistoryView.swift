@@ -228,6 +228,9 @@ struct ClipboardHistoryView: View {
                         onCopy: {
                             copyItem(item)
                         },
+                        onCopyAsPlainText: {
+                            copyItemAsPlainText(item)
+                        },
                         onDelete: {
                             monitor.removeItem(item)
                         },
@@ -369,6 +372,18 @@ struct ClipboardHistoryView: View {
             }
         }
     }
+
+    private func copyItemAsPlainText(_ item: ClipboardItem) {
+        monitor.copyAsPlainText(item)
+        withAnimation(.easeInOut(duration: 0.2)) {
+            showToast = true
+        }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+            withAnimation(.easeInOut(duration: 0.2)) {
+                showToast = false
+            }
+        }
+    }
 }
 
 // MARK: - ClipboardItemRow
@@ -378,6 +393,7 @@ struct ClipboardItemRow: View {
     let isSelected: Bool
     let onSelect: () -> Void
     let onCopy: () -> Void
+    let onCopyAsPlainText: () -> Void
     let onDelete: () -> Void
     let onToggleFavorite: () -> Void
 
@@ -445,6 +461,19 @@ struct ClipboardItemRow: View {
                             .foregroundStyle(showCopied ? .green : .secondary)
                     }
                     .buttonStyle(.plain)
+
+                    // 纯文本复制按钮（仅 HTML 类型显示）
+                    if item.type == .html {
+                        Button {
+                            onCopyAsPlainText()
+                        } label: {
+                            Image(systemName: "textformat")
+                                .font(.system(size: 14))
+                                .foregroundStyle(.secondary)
+                        }
+                        .buttonStyle(.plain)
+                        .help("复制为纯文本")
+                    }
 
                     // 收藏按钮
                     Button {

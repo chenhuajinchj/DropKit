@@ -17,6 +17,7 @@
 		42F92DB224BF56CB61881A34 /* ThumbnailCache.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5C79DDCFE3603F05D865F3B7 /* ThumbnailCache.swift */; };
 		47B6B61BA7B8F30ABFAC3C3E /* ShelfViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 235512566F31B0C278F0426F /* ShelfViewModel.swift */; };
 		5A5A5A5A5A5A5A5A5A5A5A5A /* KeyboardShortcutNames.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5B5B5B5B5B5B5B5B5B5B5B5B /* KeyboardShortcutNames.swift */; };
+		6AA3B8A3887694040CF8EA26 /* AppPickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C466A005B12E4C8DF85835C /* AppPickerView.swift */; };
 		6BE849E33D2AD29736FAD4A5 /* ClipboardItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20CA3956C671F8B5C1FD7E7A /* ClipboardItem.swift */; };
 		6C6C6C6C6C6C6C6C6C6C6C6C /* KeyboardShortcuts in Frameworks */ = {isa = PBXBuildFile; productRef = 4B4B4B4B4B4B4B4B4B4B4B4B /* KeyboardShortcuts */; };
 		771C574A63D0D16DEEA041D6 /* ClipboardHistoryPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5965F2EA17225AE772252800 /* ClipboardHistoryPanel.swift */; };
@@ -55,6 +56,7 @@
 		20CA3956C671F8B5C1FD7E7A /* ClipboardItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClipboardItem.swift; sourceTree = "<group>"; };
 		235512566F31B0C278F0426F /* ShelfViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShelfViewModel.swift; sourceTree = "<group>"; };
 		27E1BD61D5A812E68EC0A3F3 /* AppState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppState.swift; sourceTree = "<group>"; };
+		2C466A005B12E4C8DF85835C /* AppPickerView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AppPickerView.swift; sourceTree = "<group>"; };
 		3C3C3C3C3C3C3C3C3C3C3C3C /* DraggableStackView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DraggableStackView.swift; sourceTree = "<group>"; };
 		44FDD7106C941C838847EC7A /* ShelfItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShelfItem.swift; sourceTree = "<group>"; };
 		5965F2EA17225AE772252800 /* ClipboardHistoryPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClipboardHistoryPanel.swift; sourceTree = "<group>"; };
@@ -223,6 +225,7 @@
 			children = (
 				5B5B5B5B5B5B5B5B5B5B5B5B /* KeyboardShortcutNames.swift */,
 				C84A8076213D69BE544862B6 /* SettingsView.swift */,
+				2C466A005B12E4C8DF85835C /* AppPickerView.swift */,
 			);
 			path = Settings;
 			sourceTree = "<group>";
@@ -364,6 +367,7 @@
 				8E137FA90409E7D2EE6D143D /* ShelfView.swift in Sources */,
 				47B6B61BA7B8F30ABFAC3C3E /* ShelfViewModel.swift in Sources */,
 				42F92DB224BF56CB61881A34 /* ThumbnailCache.swift in Sources */,
+				6AA3B8A3887694040CF8EA26 /* AppPickerView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

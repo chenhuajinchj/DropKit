@@ -26,6 +26,23 @@ class AppSettings {
         didSet { defaults.set(clipboardMaxItems, forKey: "clipboardMaxItems") }
     }
 
+    // 忽略密码管理器内容（默认开启）
+    var ignoreConcealed: Bool {
+        didSet { defaults.set(ignoreConcealed, forKey: "ignoreConcealed") }
+    }
+
+    // 应用黑名单
+    var clipboardBlacklistEnabled: Bool {
+        didSet { defaults.set(clipboardBlacklistEnabled, forKey: "clipboardBlacklistEnabled") }
+    }
+    var clipboardBlacklist: Set<String> {
+        didSet { defaults.set(Array(clipboardBlacklist), forKey: "clipboardBlacklist") }
+    }
+
+    func isBlacklisted(_ bundleId: String) -> Bool {
+        clipboardBlacklistEnabled && clipboardBlacklist.contains(bundleId)
+    }
+
     // 开机自启动
     var launchAtLogin: Bool {
         didSet {
@@ -87,6 +104,17 @@ class AppSettings {
 
         // clipboardMaxItems 默认 0 = 永久保存
         clipboardMaxItems = defaults.integer(forKey: "clipboardMaxItems")
+
+        // ignoreConcealed 默认 true（安全起见）
+        ignoreConcealed = defaults.object(forKey: "ignoreConcealed") == nil ? true : defaults.bool(forKey: "ignoreConcealed")
+
+        // 应用黑名单
+        clipboardBlacklistEnabled = defaults.bool(forKey: "clipboardBlacklistEnabled")
+        if let saved = defaults.array(forKey: "clipboardBlacklist") as? [String] {
+            clipboardBlacklist = Set(saved)
+        } else {
+            clipboardBlacklist = []
+        }
 
         // 读取系统实际状态
         if #available(macOS 13.0, *) {
