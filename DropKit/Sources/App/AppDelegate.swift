@@ -1,15 +1,16 @@
 import AppKit
 import KeyboardShortcuts
+import SwiftUI
 
 class AppDelegate: NSObject, NSApplicationDelegate {
     var shelfPanel: ShelfPanel?
     var clipboardHistoryPanel: ClipboardHistoryPanel?
     var permissionGuideWindow: PermissionGuideWindow?
+    var settingsWindow: NSWindow?
     let dragMonitor = DragMonitor()
     let shakeDetector = ShakeDetector()
     let clipboardMonitor = ClipboardMonitor.shared
     let menuBarController = MenuBarController()
-    let settingsWindowController = SettingsWindowController()
     let folderMonitor = FolderMonitor()
 
     func applicationDidFinishLaunching(_ notification: Notification) {
@@ -63,7 +64,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         }
 
         menuBarController.onShowSettings = { [weak self] in
-            self?.settingsWindowController.showSettings()
+            self?.showSettings()
         }
 
         menuBarController.onQuit = {
@@ -83,7 +84,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         }
 
         KeyboardShortcuts.onKeyUp(for: .showSettings) { [weak self] in
-            self?.settingsWindowController.showSettings()
+            self?.showSettings()
         }
     }
 
@@ -207,6 +208,28 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
         return true
+    }
+
+    private func showSettings() {
+        if let window = settingsWindow {
+            window.makeKeyAndOrderFront(nil)
+            NSApp.activate(ignoringOtherApps: true)
+            return
+        }
+
+        let settingsView = SettingsView()
+        let hostingController = NSHostingController(rootView: settingsView)
+
+        let window = NSWindow(contentViewController: hostingController)
+        window.title = "DropKit 设置"
+        window.styleMask = [.titled, .closable]
+        window.setContentSize(NSSize(width: 400, height: 340))
+        window.center()
+        window.makeKeyAndOrderFront(nil)
+
+        NSApp.activate(ignoringOtherApps: true)
+
+        self.settingsWindow = window
     }
 
     func applicationWillTerminate(_ notification: Notification) {

@@ -28,7 +28,6 @@
 		A6DACED829B9422B472C0E8F /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C84A8076213D69BE544862B6 /* SettingsView.swift */; };
 		AAAA1111AAAA1111AAAA1111 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = AAAA2222AAAA2222AAAA2222 /* Assets.xcassets */; };
 		B1E9E1FC8D757F98DC7C7B87 /* DropKitApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5EEC229DE839084ADB696709 /* DropKitApp.swift */; };
-		B6D3F0349E4ECF0EB74EE08A /* SettingsWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8B36962356C979BF4C78FBC6 /* SettingsWindowController.swift */; };
 		C08FD2F76FA34B05F411E72B /* ShelfPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = F00441888AE62FF9BB4E0B6B /* ShelfPanel.swift */; };
 		C0C79249225A62921C5D84E8 /* DragMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = A519ACF998BC7304C7A58983 /* DragMonitor.swift */; };
 		D0A8D5038B0477210ED0046A /* DropKitTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7004D6682C39FC89EB7148B /* DropKitTests.swift */; };
@@ -63,7 +62,6 @@
 		5C79DDCFE3603F05D865F3B7 /* ThumbnailCache.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ThumbnailCache.swift; sourceTree = "<group>"; };
 		5EEC229DE839084ADB696709 /* DropKitApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DropKitApp.swift; sourceTree = "<group>"; };
 		65068F7956E17086F9DE05F1 /* DropKit.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = DropKit.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		8B36962356C979BF4C78FBC6 /* SettingsWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsWindowController.swift; sourceTree = "<group>"; };
 		93236182EE82152F26D6A646 /* AppSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppSettings.swift; sourceTree = "<group>"; };
 		984A94B1DD1567F47CCB76A7 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		9EDA4B4D81A0ED80CA247906 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
@@ -225,7 +223,6 @@
 			children = (
 				5B5B5B5B5B5B5B5B5B5B5B5B /* KeyboardShortcutNames.swift */,
 				C84A8076213D69BE544862B6 /* SettingsView.swift */,
-				8B36962356C979BF4C78FBC6 /* SettingsWindowController.swift */,
 			);
 			path = Settings;
 			sourceTree = "<group>";
@@ -360,7 +357,6 @@
 				1C1C1C1C1C1C1C1C1C1C1C1C /* PermissionGuideView.swift in Sources */,
 				1E1E1E1E1E1E1E1E1E1E1E1E /* PermissionGuideWindow.swift in Sources */,
 				A6DACED829B9422B472C0E8F /* SettingsView.swift in Sources */,
-				B6D3F0349E4ECF0EB74EE08A /* SettingsWindowController.swift in Sources */,
 				2181271BAFC16D9EA4EEB26F /* ShakeDetector.swift in Sources */,
 				4178A03FE0566562722ED8DF /* ShelfDropView.swift in Sources */,
 				95C0F18E768C69FA5147ECF3 /* ShelfItem.swift in Sources */,
