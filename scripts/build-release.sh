@@ -32,50 +32,51 @@ echo -e "${GREEN}========================================${NC}"
 echo -e "${GREEN}  DropKit Release Build v${VERSION}${NC}"
 echo -e "${GREEN}========================================${NC}"
 
-# Step 1: Clean previous build
+# Step 1: Clean previous build and remove extended attributes
 echo -e "\n${YELLOW}[1/5] Cleaning previous build...${NC}"
 rm -rf "$BUILD_DIR"
 mkdir -p "$BUILD_DIR"
 mkdir -p "$RELEASES_DIR"
 
-# Step 2: Build Release version
+# Remove resource forks, .DS_Store, and extended attributes
+echo -e "${YELLOW}Removing .DS_Store files and extended attributes...${NC}"
+find "$PROJECT_ROOT" -name ".DS_Store" -delete 2>/dev/null || true
+find "$PROJECT_ROOT" -name "._*" -delete 2>/dev/null || true
+xattr -cr "$PROJECT_ROOT/DropKit" 2>/dev/null || true
+
+# Step 2: Build Release version (using build instead of archive)
 echo -e "\n${YELLOW}[2/5] Building Release version...${NC}"
 xcodebuild -project "$XCODE_PROJECT" \
     -scheme "$APP_NAME" \
     -configuration Release \
     -derivedDataPath "$BUILD_DIR/DerivedData" \
-    -archivePath "$BUILD_DIR/$APP_NAME.xcarchive" \
-    archive \
     MARKETING_VERSION="$VERSION" \
     CURRENT_PROJECT_VERSION="$VERSION" \
-    | grep -E "(Compiling|Linking|Archive|error:|warning:)" || true
+    CODE_SIGN_IDENTITY="-" \
+    CODE_SIGNING_REQUIRED=NO \
+    CODE_SIGNING_ALLOWED=NO \
+    build 2>&1 | grep -E "(Compiling|Linking|Build|error:|warning:)" || true
 
-# Check if archive was created
-if [ ! -d "$BUILD_DIR/$APP_NAME.xcarchive" ]; then
-    echo -e "${RED}Error: Archive failed${NC}"
-    exit 1
-fi
-
-echo -e "${GREEN}Archive created successfully${NC}"
-
-# Step 3: Export .app from archive
-echo -e "\n${YELLOW}[3/5] Exporting $APP_NAME.app...${NC}"
-APP_PATH="$BUILD_DIR/$APP_NAME.xcarchive/Products/Applications/$APP_NAME.app"
+# Find the built app
+APP_PATH="$BUILD_DIR/DerivedData/Build/Products/Release/$APP_NAME.app"
 
 if [ ! -d "$APP_PATH" ]; then
-    echo -e "${RED}Error: $APP_NAME.app not found in archive${NC}"
+    echo -e "${RED}Error: Build failed - $APP_NAME.app not found${NC}"
     exit 1
 fi
 
-# Copy app to releases
-cp -R "$APP_PATH" "$RELEASES_DIR/$APP_NAME.app"
-echo -e "${GREEN}Exported $APP_NAME.app${NC}"
+echo -e "${GREEN}Build completed successfully${NC}"
+
+# Step 3: Clean extended attributes from built app and re-sign
+echo -e "\n${YELLOW}[3/5] Preparing app for distribution...${NC}"
+xattr -cr "$APP_PATH"
+codesign --force --deep --sign - "$APP_PATH"
+echo -e "${GREEN}App prepared and signed${NC}"
 
 # Step 4: Create ZIP
 echo -e "\n${YELLOW}[4/5] Creating $APP_NAME-$VERSION.zip...${NC}"
-cd "$RELEASES_DIR"
-rm -f "$APP_NAME-$VERSION.zip"
-ditto -c -k --keepParent "$APP_NAME.app" "$APP_NAME-$VERSION.zip"
+rm -f "$RELEASES_DIR/$APP_NAME-$VERSION.zip"
+ditto -c -k --keepParent "$APP_PATH" "$RELEASES_DIR/$APP_NAME-$VERSION.zip"
 echo -e "${GREEN}Created $APP_NAME-$VERSION.zip${NC}"
 
 # Step 5: Create DMG
@@ -104,13 +105,12 @@ echo -e "${GREEN}Created $APP_NAME-$VERSION.dmg${NC}"
 # Cleanup
 echo -e "\n${YELLOW}Cleaning up...${NC}"
 rm -rf "$DMG_TEMP"
-rm -rf "$RELEASES_DIR/$APP_NAME.app"
 
 # Summary
 echo -e "\n${GREEN}========================================${NC}"
 echo -e "${GREEN}  Build Complete!${NC}"
 echo -e "${GREEN}========================================${NC}"
 echo -e "\nOutput files in ${YELLOW}$RELEASES_DIR${NC}:"
-ls -lh "$RELEASES_DIR"/*.zip "$RELEASES_DIR"/*.dmg 2>/dev/null | awk '{print "  " $9 " (" $5 ")"}'
+ls -lh "$RELEASES_DIR/$APP_NAME-$VERSION".* 2>/dev/null | awk '{print "  " $9 " (" $5 ")"}'
 
 echo -e "\n${GREEN}Done!${NC}"

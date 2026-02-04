@@ -19,3 +19,10 @@ Packages/
 # Release builds
 releases/
 release/
+
+# Profiling
+*.profraw
+profiling/
+
+# Xcode workspace user data
+*.xcworkspace/xcshareddata/
