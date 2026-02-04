@@ -8,6 +8,14 @@ class ShelfPanel: NSPanel {
     private var cancellables = Set<AnyCancellable>()
     private var isDocked = false
     private var windowMoveObserver: Any?
+    private var windowResizeObserver: Any?
+
+    // 尺寸限制常量
+    private let collapsedSize = NSSize(width: 200, height: 200)
+    private let collapsedWithItemsSize = NSSize(width: 200, height: 240)
+    private let expandedMinSize = NSSize(width: 300, height: 250)
+    private let expandedMaxSize = NSSize(width: 600, height: 700)
+    private let expandedDefaultSize = NSSize(width: 400, height: 300)
 
     init() {
         super.init(
@@ -20,6 +28,7 @@ class ShelfPanel: NSPanel {
         setupPanel()
         observeViewState()
         setupWindowMoveObserver()
+        setupWindowResizeObserver()
     }
 
     private func setupPanel() {
@@ -119,9 +128,29 @@ class ShelfPanel: NSPanel {
 
         switch viewModel.viewState {
         case .collapsed:
-            newSize = viewModel.items.isEmpty ? NSSize(width: 200, height: 200) : NSSize(width: 200, height: 240)
+            newSize = viewModel.items.isEmpty ? collapsedSize : collapsedWithItemsSize
+            // 收起状态不允许 resize
+            styleMask.remove(.resizable)
+            minSize = newSize
+            maxSize = newSize
         case .expanded:
-            newSize = NSSize(width: 400, height: 300)
+            // 展开状态允许 resize
+            styleMask.insert(.resizable)
+            minSize = expandedMinSize
+            maxSize = expandedMaxSize
+
+            // 优先使用用户保存的尺寸，否则根据文件数量计算默认尺寸
+            if let savedSize = AppSettings.shared.getSavedExpandedSize() {
+                newSize = savedSize
+            } else {
+                // 根据文件数量动态计算默认高度
+                let itemCount = viewModel.items.count
+                let columns = 3
+                let rows = max(1, Int(ceil(Double(itemCount) / Double(columns))))
+                let contentHeight = CGFloat(rows) * 140 + 100  // 每行约 140pt + 导航栏/状态栏
+                let height = min(expandedMaxSize.height, max(expandedMinSize.height, contentHeight))
+                newSize = NSSize(width: expandedDefaultSize.width, height: height)
+            }
         }
 
         // 只有尺寸变化时才更新
@@ -280,6 +309,9 @@ class ShelfPanel: NSPanel {
         if let observer = windowMoveObserver {
             NotificationCenter.default.removeObserver(observer)
         }
+        if let observer = windowResizeObserver {
+            NotificationCenter.default.removeObserver(observer)
+        }
     }
 
     // MARK: - Window Position Memory
@@ -292,6 +324,22 @@ class ShelfPanel: NSPanel {
         ) { [weak self] _ in
             guard let self = self else { return }
             AppSettings.shared.saveShelfPosition(self.frame.origin)
+        }
+    }
+
+    // MARK: - Window Resize Memory
+
+    private func setupWindowResizeObserver() {
+        windowResizeObserver = NotificationCenter.default.addObserver(
+            forName: NSWindow.didResizeNotification,
+            object: self,
+            queue: .main
+        ) { [weak self] _ in
+            guard let self = self else { return }
+            // 只在展开状态保存尺寸
+            if self.viewModel.viewState == .expanded {
+                AppSettings.shared.saveShelfExpandedSize(self.frame.size)
+            }
         }
     }
 

@@ -68,12 +68,12 @@ class ShelfViewModel {
         }
 
         let item = ShelfItem(url: url)
-        items.append(item)
-        loadThumbnail(for: items.count - 1)
+        items.insert(item, at: 0)  // 新文件插入到开头，最新的显示在最前
+        loadThumbnail(for: 0)
 
-        // 超出限制时移除最早的项
+        // 超出限制时移除最早的项（现在是数组末尾）
         while items.count > maxItems {
-            let removed = items.removeFirst()
+            let removed = items.removeLast()
             removeFromCache(removed)
         }
     }

@@ -24,6 +24,11 @@ struct CollapsedShelfView: View {
     var viewModel: ShelfViewModel
     var onClose: (() -> Void)?
 
+    @State private var isCloseHovered = false
+    @State private var isMenuHovered = false
+    @State private var isDragHandleHovered = false
+    @State private var isPreviewBarHovered = false
+
     var body: some View {
         VStack(spacing: 0) {
             // 顶部栏
@@ -36,18 +41,25 @@ struct CollapsedShelfView: View {
                         .font(.system(size: 12, weight: .medium))
                         .foregroundStyle(.secondary)
                         .frame(width: 28, height: 28)
-                        .background(Color.primary.opacity(0.1))
+                        .background(Color.primary.opacity(isCloseHovered ? 0.15 : 0.1))
                         .clipShape(Circle())
                 }
                 .buttonStyle(.plain)
+                .onHover { hovering in
+                    isCloseHovered = hovering
+                }
 
                 Spacer()
 
-                // 拖动条（有文件时显示）
+                // 拖动条（有文件时显示，带 Dock 放大效果）
                 if !viewModel.items.isEmpty {
-                    RoundedRectangle(cornerRadius: 2)
-                        .fill(Color.secondary.opacity(0.4))
-                        .frame(width: 36, height: 4)
+                    Capsule()
+                        .fill(Color.secondary.opacity(isDragHandleHovered ? 0.25 : 0.4))
+                        .frame(width: isDragHandleHovered ? 80 : 36, height: isDragHandleHovered ? 20 : 4)
+                        .animation(.spring(response: 0.3, dampingFraction: 0.6), value: isDragHandleHovered)
+                        .onHover { hovering in
+                            isDragHandleHovered = hovering
+                        }
                 }
 
                 Spacer()
@@ -76,8 +88,13 @@ struct CollapsedShelfView: View {
                     .menuStyle(.borderlessButton)
                     .menuIndicator(.hidden)
                     .frame(width: 28, height: 28)
-                    .background(Color.primary.opacity(0.1))
-                    .clipShape(Circle())
+                    .background(
+                        Circle()
+                            .fill(Color.primary.opacity(isMenuHovered ? 0.15 : 0.1))
+                    )
+                    .onHover { hovering in
+                        isMenuHovered = hovering
+                    }
                 } else {
                     Color.clear.frame(width: 28, height: 28)
                 }
@@ -178,10 +195,13 @@ struct CollapsedShelfView: View {
             }
             .padding(.horizontal, 12)
             .padding(.vertical, 8)
-            .background(Color.primary.opacity(0.05))
+            .background(Color.primary.opacity(isPreviewBarHovered ? 0.1 : 0.05))
             .clipShape(RoundedRectangle(cornerRadius: 8))
         }
         .buttonStyle(.plain)
+        .onHover { hovering in
+            isPreviewBarHovered = hovering
+        }
         .padding(.horizontal, 16)
         .padding(.bottom, 12)
     }
@@ -212,7 +232,7 @@ struct ExpandedShelfView: View {
             // 底部状态栏
             statusBar
         }
-        .frame(width: 400, height: 300)
+        .frame(minWidth: 300, maxWidth: 600, minHeight: 250, maxHeight: 700)
         .onKeyPress(.delete) {
             if !viewModel.selectedItemIds.isEmpty {
                 viewModel.deleteSelected()

@@ -73,8 +73,20 @@ class AppSettings {
         didSet { defaults.set(shelfLastPositionY, forKey: "shelfLastPositionY") }
     }
 
+    // 展开状态窗口尺寸记忆（用户调整后保存）
+    private(set) var shelfExpandedWidth: Double {
+        didSet { defaults.set(shelfExpandedWidth, forKey: "shelfExpandedWidth") }
+    }
+    private(set) var shelfExpandedHeight: Double {
+        didSet { defaults.set(shelfExpandedHeight, forKey: "shelfExpandedHeight") }
+    }
+
     var hasSavedShelfPosition: Bool {
         shelfLastPositionX >= 0 && shelfLastPositionY >= 0
+    }
+
+    var hasSavedExpandedSize: Bool {
+        shelfExpandedWidth > 0 && shelfExpandedHeight > 0
     }
 
     func saveShelfPosition(_ origin: NSPoint) {
@@ -85,6 +97,16 @@ class AppSettings {
     func getSavedShelfPosition() -> NSPoint? {
         guard hasSavedShelfPosition else { return nil }
         return NSPoint(x: shelfLastPositionX, y: shelfLastPositionY)
+    }
+
+    func saveShelfExpandedSize(_ size: NSSize) {
+        shelfExpandedWidth = size.width
+        shelfExpandedHeight = size.height
+    }
+
+    func getSavedExpandedSize() -> NSSize? {
+        guard hasSavedExpandedSize else { return nil }
+        return NSSize(width: shelfExpandedWidth, height: shelfExpandedHeight)
     }
 
     private let defaults = UserDefaults.standard
@@ -136,6 +158,10 @@ class AppSettings {
 
         let storedY = defaults.object(forKey: "shelfLastPositionY")
         shelfLastPositionY = storedY != nil ? defaults.double(forKey: "shelfLastPositionY") : -1
+
+        // 展开状态窗口尺寸记忆（0 表示未保存，使用默认值）
+        shelfExpandedWidth = defaults.double(forKey: "shelfExpandedWidth")
+        shelfExpandedHeight = defaults.double(forKey: "shelfExpandedHeight")
     }
 
     private func updateLaunchAtLogin() {
