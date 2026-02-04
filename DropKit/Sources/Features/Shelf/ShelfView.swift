@@ -231,17 +231,9 @@ struct ExpandedShelfView: View {
     private var navigationBar: some View {
         HStack {
             // 返回按钮
-            Button {
+            HoverableCircleButton(icon: "chevron.left", foregroundStyle: .primary) {
                 viewModel.collapse()
-            } label: {
-                Image(systemName: "chevron.left")
-                    .font(.system(size: 12, weight: .medium))
-                    .foregroundStyle(.primary)
-                    .frame(width: 28, height: 28)
-                    .background(Color.primary.opacity(0.1))
-                    .clipShape(Circle())
             }
-            .buttonStyle(.plain)
 
             Spacer()
 
@@ -257,27 +249,85 @@ struct ExpandedShelfView: View {
 
             Spacer()
 
-            // 视图切换按钮
-            HStack(spacing: 4) {
-                viewModeButton(mode: .grid, icon: "square.grid.2x2")
-                viewModeButton(mode: .list, icon: "list.bullet")
+            // 视图切换按钮（单按钮切换）
+            HoverableCircleButton(
+                icon: viewModel.displayMode == .grid ? "square.grid.2x2" : "list.bullet",
+                foregroundStyle: .secondary
+            ) {
+                viewModel.displayMode = viewModel.displayMode == .grid ? .list : .grid
             }
 
+            // 更多操作菜单
+            moreActionsMenu
+
             // 关闭按钮
-            Button {
+            HoverableCircleButton(icon: "xmark", foregroundStyle: .secondary) {
                 onClose?()
-            } label: {
-                Image(systemName: "xmark")
-                    .font(.system(size: 12, weight: .medium))
-                    .foregroundStyle(.secondary)
-                    .frame(width: 28, height: 28)
-                    .background(Color.primary.opacity(0.1))
-                    .clipShape(Circle())
             }
-            .buttonStyle(.plain)
         }
         .padding(.horizontal, 12)
         .padding(.vertical, 10)
+    }
+
+    // MARK: - More Actions Menu
+
+    @State private var isMenuHovered = false
+
+    private var moreActionsMenu: some View {
+        Menu {
+            if !viewModel.selectedItemIds.isEmpty {
+                Button("在 Finder 中显示选中项") {
+                    NSWorkspace.shared.activateFileViewerSelecting(viewModel.selectedUrls)
+                }
+                Button("复制到剪切板") {
+                    copySelectedToClipboard()
+                }
+                Divider()
+                Button("全选") {
+                    viewModel.selectAll()
+                }
+                Button("取消选择") {
+                    viewModel.deselectAll()
+                }
+                Divider()
+                Button("删除选中项", role: .destructive) {
+                    viewModel.deleteSelected()
+                }
+            } else {
+                Button("在 Finder 中显示全部") {
+                    NSWorkspace.shared.activateFileViewerSelecting(viewModel.items.map { $0.url })
+                }
+                Divider()
+                Button("全选") {
+                    viewModel.selectAll()
+                }
+                Divider()
+                Button("清空所有", role: .destructive) {
+                    viewModel.clearAll()
+                }
+            }
+        } label: {
+            Image(systemName: "ellipsis")
+                .font(.system(size: 12, weight: .medium))
+                .foregroundStyle(.secondary)
+        }
+        .menuStyle(.borderlessButton)
+        .menuIndicator(.hidden)
+        .frame(width: 28, height: 28)
+        .background(
+            Circle()
+                .fill(Color.primary.opacity(isMenuHovered ? 0.15 : 0.1))
+        )
+        .onHover { hovering in
+            isMenuHovered = hovering
+        }
+    }
+
+    private func copySelectedToClipboard() {
+        let urls = viewModel.selectedUrls
+        let pasteboard = NSPasteboard.general
+        pasteboard.clearContents()
+        pasteboard.writeObjects(urls as [NSURL])
     }
 
     // MARK: - Status Bar
@@ -301,20 +351,6 @@ struct ExpandedShelfView: View {
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 8)
-    }
-
-    private func viewModeButton(mode: DisplayMode, icon: String) -> some View {
-        Button {
-            viewModel.displayMode = mode
-        } label: {
-            Image(systemName: icon)
-                .font(.system(size: 14))
-                .foregroundStyle(viewModel.displayMode == mode ? .primary : .secondary)
-                .frame(width: 32, height: 32)
-                .background(viewModel.displayMode == mode ? Color.primary.opacity(0.1) : Color.clear)
-                .clipShape(RoundedRectangle(cornerRadius: 6))
-        }
-        .buttonStyle(.plain)
     }
 
     // MARK: - Grid Content
@@ -635,6 +671,31 @@ struct TrashDropZone: View {
                 }
             }
             return true
+        }
+    }
+}
+
+// MARK: - Hoverable Circle Button
+
+struct HoverableCircleButton: View {
+    let icon: String
+    let foregroundStyle: HierarchicalShapeStyle
+    let action: () -> Void
+
+    @State private var isHovered = false
+
+    var body: some View {
+        Button(action: action) {
+            Image(systemName: icon)
+                .font(.system(size: 12, weight: .medium))
+                .foregroundStyle(foregroundStyle)
+                .frame(width: 28, height: 28)
+                .background(Color.primary.opacity(isHovered ? 0.15 : 0.1))
+                .clipShape(Circle())
+        }
+        .buttonStyle(.plain)
+        .onHover { hovering in
+            isHovered = hovering
         }
     }
 }
