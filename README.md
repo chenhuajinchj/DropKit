@@ -14,13 +14,13 @@
 - 拖拽文件时摇晃鼠标，即可唤出悬浮暂存架
 - 临时存放文件，随时拖出使用
 - 支持宫格和列表两种视图模式
-- 支持 Quick Look 快速预览
 
 #### 剪贴板历史
 - 自动监控剪贴板变化
 - 支持文本、图片、文件和链接
 - 搜索和置顶功能
 - 隐私模式（暂停监控）
+- 按空格键快速预览内容
 
 #### 菜单栏集成
 - 菜单栏快速访问
@@ -77,12 +77,12 @@ DropKit 需要辅助功能权限来检测鼠标摇晃手势：
 - **添加文件**：将文件拖放到暂存架上
 - **使用文件**：从暂存架拖出文件到任意位置
 - **展开视图**：点击展开按钮查看所有文件
-- **快速预览**：按空格键预览选中的文件
 
 #### 剪贴板历史
 - **打开**：点击菜单栏图标 →「剪贴板历史」或按 `⌘⇧V`
 - **粘贴项目**：点击任意项目或按回车键
 - **搜索**：输入文字筛选项目
+- **预览**：按空格键预览选中项目
 - **置顶项目**：右键 → 置顶
 - **删除项目**：右键 → 删除
 
@@ -120,7 +120,6 @@ A lightweight macOS menu bar utility for quick file staging and clipboard histor
 - Drop files temporarily for quick access
 - Drag files out to any destination
 - Grid and list view modes
-- Quick Look preview support
 
 #### Clipboard History
 - Automatic clipboard monitoring
@@ -128,6 +127,7 @@ A lightweight macOS menu bar utility for quick file staging and clipboard histor
 - Search through clipboard history
 - Pin important items
 - Privacy mode to pause monitoring
+- Press Space to preview content
 
 #### Menu Bar Integration
 - Quick access from menu bar
@@ -184,12 +184,12 @@ DropKit needs accessibility permission to detect mouse shake gestures:
 - **Add files**: Drop files onto the shelf
 - **Use files**: Drag files out of the shelf to any destination
 - **Expand view**: Click the expand button to see all files
-- **Quick Look**: Press Space to preview selected file
 
 #### Clipboard History
 - **Open**: Click menu bar icon → "Clipboard History" or press `⌘⇧V`
 - **Paste item**: Click on any item or press Enter
 - **Search**: Type to filter items
+- **Preview**: Press Space to preview selected item
 - **Pin item**: Right-click → Pin
 - **Delete item**: Right-click → Delete
 
