@@ -159,17 +159,18 @@ struct CollapsedShelfView: View {
             viewModel.expand()
         } label: {
             HStack {
-                if let firstItem = viewModel.items.first {
+                if viewModel.items.count >= 2 {
+                    // 2 个及以上项目时，只显示数量
+                    Text("\(viewModel.items.count) 个项目")
+                        .font(.caption)
+                        .foregroundStyle(.primary)
+                } else if let firstItem = viewModel.items.first {
+                    // 只有 1 个项目时，显示文件名
                     Text(firstItem.name)
                         .font(.caption)
                         .foregroundStyle(.primary)
                         .lineLimit(1)
                         .truncationMode(.middle)
-                }
-                if viewModel.items.count > 1 {
-                    Text("+\(viewModel.items.count - 1)")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
                 }
                 Image(systemName: "chevron.right")
                     .font(.caption2)
