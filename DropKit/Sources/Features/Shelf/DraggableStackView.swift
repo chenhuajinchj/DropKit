@@ -28,6 +28,11 @@ class DraggableStackNSView: NSView, NSDraggingSource {
         wantsLayer = true
     }
 
+    // 允许第一次点击就能操作（不需要先激活窗口）
+    override func acceptsFirstMouse(for event: NSEvent?) -> Bool {
+        return true
+    }
+
     // MARK: - Mouse Events
 
     override func mouseDown(with event: NSEvent) {
@@ -191,6 +196,11 @@ class DraggableItemNSView: NSView, NSDraggingSource {
     required init?(coder: NSCoder) {
         super.init(coder: coder)
         wantsLayer = true
+    }
+
+    // 允许第一次点击就能操作（不需要先激活窗口）
+    override func acceptsFirstMouse(for event: NSEvent?) -> Bool {
+        return true
     }
 
     // MARK: - Mouse Events

@@ -28,6 +28,11 @@ class ShelfDropView: NSView {
         wantsLayer = true
     }
 
+    // 允许第一次点击就能操作（不需要先激活窗口）
+    override func acceptsFirstMouse(for event: NSEvent?) -> Bool {
+        return true
+    }
+
     // MARK: - Window Dragging
 
     override var mouseDownCanMoveWindow: Bool { false }

@@ -1,6 +1,13 @@
 import AppKit
 import SwiftUI
 
+/// 支持第一次点击就能操作的 NSView
+private class FirstClickContentView: NSView {
+    override func acceptsFirstMouse(for event: NSEvent?) -> Bool {
+        return true
+    }
+}
+
 class ClipboardHistoryPanel: NSPanel {
     let monitor: ClipboardMonitor
     private var clickMonitor: Any?
@@ -33,7 +40,7 @@ class ClipboardHistoryPanel: NSPanel {
         visualEffect.layer?.cornerRadius = 10
         visualEffect.layer?.masksToBounds = true
 
-        contentView = NSView(frame: NSRect(x: 0, y: 0, width: 300, height: 400))
+        contentView = FirstClickContentView(frame: NSRect(x: 0, y: 0, width: 300, height: 400))
         contentView?.addSubview(visualEffect)
 
         NSLayoutConstraint.activate([
