@@ -7,126 +7,179 @@ struct SettingsView: View {
     @State private var showDeleteSuccess = false
     @State private var showFolderPicker = false
     @State private var showAppPicker = false
+    @State private var selectedTab = 0
 
     var body: some View {
-        TabView {
-            generalTab
-                .tabItem {
-                    Label("通用", systemImage: "gear")
-                }
+        VStack(spacing: 0) {
+            // 自定义 Tab 选择器
+            Picker("", selection: $selectedTab) {
+                Text("通用").tag(0)
+                Text("悬浮窗").tag(1)
+                Text("剪切板").tag(2)
+            }
+            .pickerStyle(.segmented)
+            .padding(.horizontal, 80)
+            .padding(.top, 12)
+            .padding(.bottom, 8)
 
-            shakeTab
-                .tabItem {
-                    Label("摇晃触发", systemImage: "hand.draw")
+            // Tab 内容
+            Group {
+                switch selectedTab {
+                case 0:
+                    generalTab
+                case 1:
+                    shelfTab
+                case 2:
+                    clipboardTab
+                default:
+                    generalTab
                 }
-
-            clipboardTab
-                .tabItem {
-                    Label("剪切板", systemImage: "clipboard")
-                }
-
-            shortcutsTab
-                .tabItem {
-                    Label("快捷键", systemImage: "keyboard")
-                }
-
-            folderMonitorTab
-                .tabItem {
-                    Label("文件夹监听", systemImage: "folder.badge.gearshape")
-                }
+            }
         }
-        .frame(width: 420, height: 420)
+        .frame(width: 420, height: 400)
+        .background(.background)
     }
+
+    // MARK: - 通用设置（合并原通用 + 快捷键）
 
     private var generalTab: some View {
         Form {
-            Toggle("开机自启动", isOn: $settings.launchAtLogin)
+            Section {
+                Toggle("开机自启动", isOn: $settings.launchAtLogin)
+            } header: {
+                Text("启动")
+            }
+
+            Section {
+                LabeledContent("显示悬浮窗") {
+                    KeyboardShortcuts.Recorder(for: .showShelf)
+                }
+                LabeledContent("剪切板历史") {
+                    KeyboardShortcuts.Recorder(for: .showClipboardHistory)
+                }
+                LabeledContent("设置") {
+                    KeyboardShortcuts.Recorder(for: .showSettings)
+                }
+            } header: {
+                Text("快捷键")
+            }
         }
-        .padding()
+        .formStyle(.grouped)
     }
 
-    private var shakeTab: some View {
+    // MARK: - 悬浮窗设置（合并原摇晃触发 + 文件夹监听）
+
+    private var shelfTab: some View {
         Form {
-            Stepper("摇晃次数: \(settings.shakeMinShakes)", value: $settings.shakeMinShakes, in: 2...8)
+            Section {
+                LabeledContent("摇晃次数") {
+                    Stepper("\(settings.shakeMinShakes) 次", value: $settings.shakeMinShakes, in: 2...8)
+                        .frame(width: 100)
+                }
 
-            HStack {
-                Text("时间窗口: \(String(format: "%.2f", settings.shakeTimeWindow))秒")
-                Slider(value: $settings.shakeTimeWindow, in: 0.2...0.8, step: 0.05)
+                LabeledContent("时间窗口") {
+                    HStack {
+                        Slider(value: $settings.shakeTimeWindow, in: 0.2...0.8, step: 0.05)
+                            .frame(width: 120)
+                        Text("\(String(format: "%.2f", settings.shakeTimeWindow)) 秒")
+                            .monospacedDigit()
+                            .frame(width: 55, alignment: .trailing)
+                    }
+                }
+
+                LabeledContent("最小移动") {
+                    HStack {
+                        Slider(value: $settings.shakeMinMovement, in: 10...60, step: 5)
+                            .frame(width: 120)
+                        Text("\(Int(settings.shakeMinMovement)) 像素")
+                            .monospacedDigit()
+                            .frame(width: 55, alignment: .trailing)
+                    }
+                }
+            } header: {
+                Text("摇晃触发")
             }
 
-            HStack {
-                Text("最小移动: \(Int(settings.shakeMinMovement))像素")
-                Slider(value: $settings.shakeMinMovement, in: 10...60, step: 5)
+            Section {
+                Toggle("启用文件夹监听", isOn: $settings.folderMonitorEnabled)
+
+                LabeledContent("文件夹") {
+                    HStack {
+                        Text(settings.watchedFolderPath ?? "未选择")
+                            .foregroundColor(settings.watchedFolderPath == nil ? .secondary : .primary)
+                            .lineLimit(1)
+                            .truncationMode(.middle)
+                            .frame(maxWidth: 150, alignment: .leading)
+                        Button("选择...") {
+                            selectFolder()
+                        }
+                    }
+                }
+
+                Button("使用 macOS 截图文件夹") {
+                    if let path = FolderMonitor.getScreenshotFolderPath() {
+                        settings.watchedFolderPath = path
+                    }
+                }
+            } header: {
+                Text("文件夹监听")
+            }
+
+            Section {
+                Toggle("自动复制到剪切板", isOn: $settings.autoCopyToClipboard)
+                Toggle("自动显示悬浮窗", isOn: $settings.autoShowShelfOnNewFile)
+            } header: {
+                Text("新文件行为")
+            } footer: {
+                Text("新文件出现时自动复制路径，可直接 Cmd+V 粘贴")
             }
         }
-        .padding()
+        .formStyle(.grouped)
     }
+
+    // MARK: - 剪切板设置（保持不变）
 
     private var clipboardTab: some View {
         Form {
-            // 保留时长
-            VStack(alignment: .leading, spacing: 4) {
-                HStack {
-                    Text("保留时长")
-                    Spacer()
-                    TextField("", value: $settings.clipboardRetentionDays, format: .number)
-                        .textFieldStyle(.roundedBorder)
-                        .frame(width: 60)
-                        .multilineTextAlignment(.center)
-                    Text("天")
+            Section {
+                LabeledContent("保留时长") {
+                    HStack(spacing: 4) {
+                        TextField("", value: $settings.clipboardRetentionDays, format: .number)
+                            .textFieldStyle(.roundedBorder)
+                            .frame(width: 60)
+                            .multilineTextAlignment(.center)
+                        Text("天")
+                    }
                 }
+
+                LabeledContent("最大条数") {
+                    HStack(spacing: 4) {
+                        TextField("", value: $settings.clipboardMaxItems, format: .number)
+                            .textFieldStyle(.roundedBorder)
+                            .frame(width: 60)
+                            .multilineTextAlignment(.center)
+                        Text("条")
+                    }
+                }
+            } header: {
+                Text("历史记录")
+            } footer: {
                 Text("输入 0 表示永久保留，仅统计和删除未收藏条目")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
             }
 
-            Divider()
-
-            // 最大保留条数
-            VStack(alignment: .leading, spacing: 4) {
-                HStack {
-                    Text("最大保留条数")
-                    Spacer()
-                    TextField("", value: $settings.clipboardMaxItems, format: .number)
-                        .textFieldStyle(.roundedBorder)
-                        .frame(width: 60)
-                        .multilineTextAlignment(.center)
-                    Text("条")
-                }
-                Text("输入 0 表示永久保留，仅统计和删除未收藏条目")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
-            }
-
-            Divider()
-
-            // 忽略密码管理器内容
-            VStack(alignment: .leading, spacing: 4) {
+            Section {
                 Toggle("忽略密码管理器内容", isOn: $settings.ignoreConcealed)
+            } footer: {
                 Text("自动跳过来自 1Password、LastPass 等的复制内容")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
             }
 
-            Divider()
-
-            // 应用黑名单
-            VStack(alignment: .leading, spacing: 8) {
+            Section {
                 Toggle("启用应用黑名单", isOn: $settings.clipboardBlacklistEnabled)
-                Text("忽略来自指定应用的剪切板内容")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
 
-                if settings.clipboardBlacklistEnabled && !settings.clipboardBlacklist.isEmpty {
+                if settings.clipboardBlacklistEnabled {
                     ForEach(Array(settings.clipboardBlacklist).sorted(), id: \.self) { bundleId in
                         HStack {
-                            if let appName = getAppName(for: bundleId) {
-                                Text(appName)
-                                    .font(.callout)
-                            } else {
-                                Text(bundleId)
-                                    .font(.callout)
-                            }
+                            Text(getAppName(for: bundleId) ?? bundleId)
                             Spacer()
                             Button {
                                 settings.clipboardBlacklist.remove(bundleId)
@@ -137,43 +190,37 @@ struct SettingsView: View {
                             .buttonStyle(.plain)
                         }
                     }
-                }
 
-                if settings.clipboardBlacklistEnabled {
                     Button("添加应用...") {
                         showAppPicker = true
                     }
                 }
+            } footer: {
+                Text("忽略来自指定应用的剪切板内容")
             }
 
-            Divider()
-
-            // 删除历史记录按钮
-            HStack {
-                Spacer()
+            Section {
                 Button(role: .destructive) {
                     showDeleteConfirmation = true
                 } label: {
                     HStack {
-                        Image(systemName: "trash")
-                        Text("删除历史记录")
+                        Spacer()
+                        Label("删除所有历史记录", systemImage: "trash")
+                        Spacer()
                     }
                 }
-                .buttonStyle(.bordered)
-                Spacer()
-            }
 
-            if showDeleteSuccess {
-                HStack {
-                    Spacer()
-                    Text("已删除所有历史记录")
-                        .font(.caption)
-                        .foregroundColor(.green)
-                    Spacer()
+                if showDeleteSuccess {
+                    HStack {
+                        Spacer()
+                        Text("已删除所有历史记录")
+                            .foregroundColor(.green)
+                        Spacer()
+                    }
                 }
             }
         }
-        .padding()
+        .formStyle(.grouped)
         .alert("确认删除", isPresented: $showDeleteConfirmation) {
             Button("取消", role: .cancel) { }
             Button("删除", role: .destructive) {
@@ -196,66 +243,6 @@ struct SettingsView: View {
             return FileManager.default.displayName(atPath: appURL.path)
         }
         return nil
-    }
-
-    private var shortcutsTab: some View {
-        Form {
-            KeyboardShortcuts.Recorder("显示悬浮窗:", name: .showShelf)
-            KeyboardShortcuts.Recorder("剪切板历史:", name: .showClipboardHistory)
-            KeyboardShortcuts.Recorder("设置:", name: .showSettings)
-        }
-        .padding()
-    }
-
-    private var folderMonitorTab: some View {
-        Form {
-            // 启用开关
-            Toggle("启用文件夹监听", isOn: $settings.folderMonitorEnabled)
-
-            Divider()
-
-            // 文件夹路径
-            VStack(alignment: .leading, spacing: 8) {
-                Text("监听文件夹")
-                    .font(.headline)
-
-                HStack {
-                    TextField("选择文件夹...", text: Binding(
-                        get: { settings.watchedFolderPath ?? "" },
-                        set: { settings.watchedFolderPath = $0.isEmpty ? nil : $0 }
-                    ))
-                    .textFieldStyle(.roundedBorder)
-                    .disabled(true)
-
-                    Button("选择...") {
-                        selectFolder()
-                    }
-                }
-
-                Button("使用 macOS 截图文件夹") {
-                    if let path = FolderMonitor.getScreenshotFolderPath() {
-                        settings.watchedFolderPath = path
-                    }
-                }
-                .font(.caption)
-            }
-
-            Divider()
-
-            // 行为选项
-            VStack(alignment: .leading, spacing: 8) {
-                Text("新文件行为")
-                    .font(.headline)
-
-                Toggle("自动复制到剪切板", isOn: $settings.autoCopyToClipboard)
-                Text("新文件出现时自动复制路径，可直接 Cmd+V 粘贴")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
-
-                Toggle("自动显示悬浮窗", isOn: $settings.autoShowShelfOnNewFile)
-            }
-        }
-        .padding()
     }
 
     private func selectFolder() {
