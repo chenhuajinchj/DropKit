@@ -240,6 +240,61 @@ xcodebuild clean -scheme DropKit
 
 ---
 
+## 打包发布流程（重要）
+
+### 编译 Release 版本
+```bash
+cd "/Users/chenhuajin/Desktop/Dropkit v2/DropKit"
+pkill -f DropKit
+xcodebuild -scheme DropKit -configuration Release build
+```
+
+### 创建 DMG 安装包
+```bash
+# ⚠️ 重要：DMG 必须包含 Applications 快捷方式，方便用户安装
+
+# 1. 创建临时目录
+rm -rf /tmp/dmg-staging
+mkdir -p /tmp/dmg-staging
+
+# 2. 复制 Release 版本的 .app
+cp -R /Users/chenhuajin/Library/Developer/Xcode/DerivedData/DropKit-bqmlcvlnjuylvzeagcwxbprezsdf/Build/Products/Release/DropKit.app /tmp/dmg-staging/
+
+# 3. 创建 Applications 文件夹快捷方式（关键步骤！）
+ln -s /Applications /tmp/dmg-staging/Applications
+
+# 4. 生成 DMG
+hdiutil create -volname "DropKit" -srcfolder /tmp/dmg-staging -ov -format UDZO "releases/DropKit-版本号.dmg"
+```
+
+### 创建 ZIP 包
+```bash
+cd /Users/chenhuajin/Library/Developer/Xcode/DerivedData/DropKit-bqmlcvlnjuylvzeagcwxbprezsdf/Build/Products/Release/
+zip -r "/Users/chenhuajin/Desktop/Dropkit v2/DropKit/releases/DropKit-版本号.zip" DropKit.app
+```
+
+### 发布到 GitHub Release
+```bash
+cd "/Users/chenhuajin/Desktop/Dropkit v2/DropKit"
+
+# 创建 Release 并上传文件
+gh release create v版本号 \
+  "releases/DropKit-版本号.dmg" \
+  "releases/DropKit-版本号.zip" \
+  --title "v版本号" \
+  --notes "更新说明"
+
+# 或更新已有 Release 的文件
+gh release upload v版本号 "releases/DropKit-版本号.dmg" --clobber
+```
+
+### 版本号更新
+发布新版本前，需要更新 Info.plist 中的版本号：
+- `CFBundleShortVersionString`: 显示版本号（如 1.0.2）
+- `CFBundleVersion`: 构建版本号
+
+---
+
 ## 现有代码说明
 
 ### AppState.swift
