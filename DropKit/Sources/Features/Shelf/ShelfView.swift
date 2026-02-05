@@ -226,11 +226,6 @@ struct ExpandedShelfView: View {
             } else {
                 listContentView
             }
-
-            Divider()
-
-            // 底部状态栏
-            statusBar
         }
         .frame(minWidth: 300, maxWidth: 600, minHeight: 250, maxHeight: 700)
         .onKeyPress(.delete) {
@@ -349,29 +344,6 @@ struct ExpandedShelfView: View {
         let pasteboard = NSPasteboard.general
         pasteboard.clearContents()
         pasteboard.writeObjects(urls as [NSURL])
-    }
-
-    // MARK: - Status Bar
-
-    private var statusBar: some View {
-        HStack {
-            Text(viewModel.formattedTotalSize)
-                .font(.caption)
-                .foregroundStyle(.secondary)
-
-            Spacer()
-
-            if !viewModel.selectedItemIds.isEmpty {
-                Button("取消选择") {
-                    viewModel.deselectAll()
-                }
-                .font(.caption)
-                .buttonStyle(.plain)
-                .foregroundStyle(.secondary)
-            }
-        }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 8)
     }
 
     // MARK: - Grid Content
