@@ -43,6 +43,13 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         setupDragAndShake()
         setupKeyboardShortcuts()
         setupFolderMonitor()
+
+        // 自动检查更新
+        if AppSettings.shared.autoCheckUpdates {
+            Task {
+                await UpdateChecker.shared.checkForUpdates()
+            }
+        }
     }
 
     private func showPermissionGuide() {

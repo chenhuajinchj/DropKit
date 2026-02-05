@@ -81,6 +81,16 @@ class AppSettings {
         didSet { defaults.set(shelfExpandedHeight, forKey: "shelfExpandedHeight") }
     }
 
+    // MARK: - 更新检查设置
+
+    var autoCheckUpdates: Bool {
+        didSet { defaults.set(autoCheckUpdates, forKey: "autoCheckUpdates") }
+    }
+
+    var lastUpdateCheckDate: Date? {
+        didSet { defaults.set(lastUpdateCheckDate, forKey: "lastUpdateCheckDate") }
+    }
+
     var hasSavedShelfPosition: Bool {
         shelfLastPositionX >= 0 && shelfLastPositionY >= 0
     }
@@ -162,6 +172,10 @@ class AppSettings {
         // 展开状态窗口尺寸记忆（0 表示未保存，使用默认值）
         shelfExpandedWidth = defaults.double(forKey: "shelfExpandedWidth")
         shelfExpandedHeight = defaults.double(forKey: "shelfExpandedHeight")
+
+        // 更新检查设置（默认开启）
+        autoCheckUpdates = defaults.object(forKey: "autoCheckUpdates") == nil ? true : defaults.bool(forKey: "autoCheckUpdates")
+        lastUpdateCheckDate = defaults.object(forKey: "lastUpdateCheckDate") as? Date
     }
 
     private func updateLaunchAtLogin() {

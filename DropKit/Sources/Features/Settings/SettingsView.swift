@@ -63,8 +63,54 @@ struct SettingsView: View {
             } header: {
                 Text("快捷键")
             }
+
+            Section {
+                LabeledContent("当前版本") {
+                    Text(UpdateChecker.shared.currentVersion)
+                        .foregroundColor(.secondary)
+                }
+
+                HStack {
+                    Button("检查更新") {
+                        Task { await UpdateChecker.shared.checkForUpdates() }
+                    }
+                    .disabled(UpdateChecker.shared.state == .checking)
+
+                    Spacer()
+
+                    updateStatusView
+                }
+
+                Toggle("启动时自动检查", isOn: $settings.autoCheckUpdates)
+            } header: {
+                Text("关于")
+            }
         }
         .formStyle(.grouped)
+    }
+
+    @ViewBuilder
+    private var updateStatusView: some View {
+        switch UpdateChecker.shared.state {
+        case .checking:
+            ProgressView()
+                .scaleEffect(0.7)
+        case .upToDate:
+            Label("已是最新", systemImage: "checkmark.circle.fill")
+                .foregroundColor(.green)
+                .font(.caption)
+        case .available(let version, _, _):
+            Button("v\(version) 可用") {
+                UpdateChecker.shared.openDownloadPage()
+            }
+            .foregroundColor(.orange)
+        case .failed(let msg):
+            Text(msg)
+                .foregroundColor(.red)
+                .font(.caption)
+        case .idle:
+            EmptyView()
+        }
     }
 
     // MARK: - 悬浮窗设置（合并原摇晃触发 + 文件夹监听）

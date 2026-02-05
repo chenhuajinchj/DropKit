@@ -136,9 +136,12 @@ class ClipboardMonitor {
             return ClipboardItem(type: .file, content: url.path)
         }
 
-        // 检查 HTML
+        // 检查 HTML - 转换为纯文本存储
         if let html = pasteboard.string(forType: .html) {
-            return ClipboardItem(type: .html, content: html)
+            let plainText = ClipboardItem.stripHTMLTags(from: html)
+            if !plainText.isEmpty {
+                return ClipboardItem(type: .text, content: plainText)
+            }
         }
 
         // 检查纯文本（包括 URL，统一作为文本处理）
@@ -275,22 +278,6 @@ class ClipboardMonitor {
                let image = NSImage(data: imageData) {
                 pasteboard.writeObjects([image])
             }
-        }
-    }
-
-    /// 以纯文本方式复制到剪切板（去除 HTML 格式）
-    func copyAsPlainText(_ item: ClipboardItem) {
-        let pasteboard = NSPasteboard.general
-        pasteboard.clearContents()
-
-        switch item.type {
-        case .html:
-            let plainText = ClipboardItem.stripHTMLTags(from: item.content)
-            pasteboard.setString(plainText, forType: .string)
-        case .text:
-            pasteboard.setString(item.content, forType: .string)
-        case .file, .image:
-            copyToClipboard(item)  // 回退到普通复制
         }
     }
 

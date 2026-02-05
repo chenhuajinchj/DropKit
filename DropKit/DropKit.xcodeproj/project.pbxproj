@@ -35,6 +35,7 @@
 		DAC81290E30B71F92EE032F9 /* ClipboardHistoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D6EDD5D2152DFF4CDE093CCF /* ClipboardHistoryView.swift */; };
 		FA4D571EB5406BA943E4742D /* AppState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27E1BD61D5A812E68EC0A3F3 /* AppState.swift */; };
 		FM01FM01FM01FM01FM01FM01 /* FolderMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = FM02FM02FM02FM02FM02FM02 /* FolderMonitor.swift */; };
+		UC01UC01UC01UC01UC01UC01 /* UpdateChecker.swift in Sources */ = {isa = PBXBuildFile; fileRef = UC02UC02UC02UC02UC02UC02 /* UpdateChecker.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -79,6 +80,7 @@
 		F00441888AE62FF9BB4E0B6B /* ShelfPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShelfPanel.swift; sourceTree = "<group>"; };
 		F60C94C7AFA978E8C515594E /* ShelfDropView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShelfDropView.swift; sourceTree = "<group>"; };
 		FM02FM02FM02FM02FM02FM02 /* FolderMonitor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FolderMonitor.swift; sourceTree = "<group>"; };
+		UC02UC02UC02UC02UC02UC02 /* UpdateChecker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UpdateChecker.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -238,6 +240,7 @@
 				FM02FM02FM02FM02FM02FM02 /* FolderMonitor.swift */,
 				D122D4B3DB99ACD2A0EAB3E7 /* ShakeDetector.swift */,
 				5C79DDCFE3603F05D865F3B7 /* ThumbnailCache.swift */,
+				UC02UC02UC02UC02UC02UC02 /* UpdateChecker.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -368,6 +371,7 @@
 				47B6B61BA7B8F30ABFAC3C3E /* ShelfViewModel.swift in Sources */,
 				42F92DB224BF56CB61881A34 /* ThumbnailCache.swift in Sources */,
 				6AA3B8A3887694040CF8EA26 /* AppPickerView.swift in Sources */,
+				UC01UC01UC01UC01UC01UC01 /* UpdateChecker.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
