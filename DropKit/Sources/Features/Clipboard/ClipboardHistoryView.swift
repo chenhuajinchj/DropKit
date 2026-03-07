@@ -81,6 +81,11 @@ struct ClipboardHistoryView: View {
             }
             return .ignored
         }
+        .onKeyPress(characters: .alphanumerics) { _ in
+            // 打字时清除条目选中，让后续空格不再触发预览
+            selectedItemId = nil
+            return .ignored
+        }
         .onKeyPress(keys: [.escape]) { _ in
             if showPreview {
                 showPreview = false
@@ -102,7 +107,10 @@ struct ClipboardHistoryView: View {
 
                 TextField("搜索剪切板...", text: Binding(
                     get: { monitor.searchText },
-                    set: { monitor.searchText = $0 }
+                    set: {
+                        monitor.searchText = $0
+                        selectedItemId = nil
+                    }
                 ))
                 .textFieldStyle(.plain)
                 .font(.system(size: 13))
@@ -134,6 +142,9 @@ struct ClipboardHistoryView: View {
             .padding(.vertical, 6)
             .background(Color.primary.opacity(0.05))
             .clipShape(RoundedRectangle(cornerRadius: 10))
+            .simultaneousGesture(TapGesture().onEnded {
+                selectedItemId = nil
+            })
         }
         .padding(.horizontal, 16)
         .padding(.top, 12)
