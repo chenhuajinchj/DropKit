@@ -319,6 +319,23 @@ struct ClipboardHistoryView: View {
         }
     }
 
+    /// 使用 CGImageSource 下采样加载预览图，避免将原图完整加载到内存
+    private static func downsampledImage(for path: String, maxPixelSize: Int = 640) -> NSImage? {
+        let url = URL(fileURLWithPath: path)
+        let options: [CFString: Any] = [
+            kCGImageSourceCreateThumbnailFromImageAlways: true,
+            kCGImageSourceCreateThumbnailWithTransform: true,
+            kCGImageSourceThumbnailMaxPixelSize: maxPixelSize,
+            kCGImageSourceShouldCacheImmediately: false
+        ]
+        guard let source = CGImageSourceCreateWithURL(url as CFURL, nil),
+              let cgImage = CGImageSourceCreateThumbnailAtIndex(source, 0, options as CFDictionary) else {
+            return nil
+        }
+        let size = NSSize(width: CGFloat(cgImage.width), height: CGFloat(cgImage.height))
+        return NSImage(cgImage: cgImage, size: size)
+    }
+
     @ViewBuilder
     private func previewContent(for item: ClipboardItem) -> some View {
         switch item.type {
@@ -332,7 +349,7 @@ struct ClipboardHistoryView: View {
                 .textSelection(.enabled)
         case .file:
             if item.isImageFile,
-               let nsImage = NSImage(contentsOfFile: item.content) {
+               let nsImage = Self.downsampledImage(for: item.content) {
                 Image(nsImage: nsImage)
                     .resizable()
                     .aspectRatio(contentMode: .fit)
@@ -349,7 +366,7 @@ struct ClipboardHistoryView: View {
             }
         case .image:
             if !item.content.isEmpty,
-               let nsImage = NSImage(contentsOfFile: item.content) {
+               let nsImage = Self.downsampledImage(for: item.content) {
                 Image(nsImage: nsImage)
                     .resizable()
                     .aspectRatio(contentMode: .fit)

@@ -87,11 +87,15 @@ struct ShelfItem: Identifiable {
         }.value
     }
 
-    // 格式化文件大小
-    var formattedSize: String {
+    private static let byteCountFormatter: ByteCountFormatter = {
         let formatter = ByteCountFormatter()
         formatter.countStyle = .file
-        return formatter.string(fromByteCount: fileSize)
+        return formatter
+    }()
+
+    // 格式化文件大小
+    var formattedSize: String {
+        Self.byteCountFormatter.string(fromByteCount: fileSize)
     }
 
     // 格式化尺寸

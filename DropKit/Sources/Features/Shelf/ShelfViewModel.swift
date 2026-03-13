@@ -154,10 +154,14 @@ class ShelfViewModel {
         items.reduce(0) { $0 + $1.fileSize }
     }
 
-    var formattedTotalSize: String {
+    private static let byteCountFormatter: ByteCountFormatter = {
         let formatter = ByteCountFormatter()
         formatter.countStyle = .file
-        return formatter.string(fromByteCount: totalSize)
+        return formatter
+    }()
+
+    var formattedTotalSize: String {
+        Self.byteCountFormatter.string(fromByteCount: totalSize)
     }
 
     var itemCountDescription: String {

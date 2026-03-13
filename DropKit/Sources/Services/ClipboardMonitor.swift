@@ -18,6 +18,7 @@ class ClipboardMonitor {
     }
     private var lastChangeCount: Int = 0
     private var timer: Timer?
+    private var saveWorkItem: DispatchWorkItem?
 
     var searchText: String = "" {
         didSet { _filteredItemsCache = nil }
@@ -82,7 +83,7 @@ class ClipboardMonitor {
 
     func start() {
         lastChangeCount = NSPasteboard.general.changeCount
-        timer = Timer.scheduledTimer(withTimeInterval: 0.5, repeats: true) { [weak self] _ in
+        timer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] _ in
             self?.checkClipboard()
         }
     }
@@ -239,7 +240,25 @@ class ClipboardMonitor {
             items = (favorites + nonFavorites).sorted { $0.timestamp > $1.timestamp }
         }
 
-        // 清理孤立的图片文件
+        // 清理孤立的图片文件（节流：每 50 次或每 10 分钟）
+        cleanupOrphanedImagesIfNeeded()
+    }
+
+    // 孤立图片清理的计数器和时间戳
+    private var addItemCount = 0
+    private var lastOrphanCleanupTime = Date()
+    private let orphanCleanupInterval: TimeInterval = 600  // 10 分钟
+    private let orphanCleanupItemThreshold = 50
+
+    private func cleanupOrphanedImagesIfNeeded() {
+        addItemCount += 1
+        let now = Date()
+        let shouldCleanup = addItemCount >= orphanCleanupItemThreshold ||
+            now.timeIntervalSince(lastOrphanCleanupTime) >= orphanCleanupInterval
+        guard shouldCleanup else { return }
+
+        addItemCount = 0
+        lastOrphanCleanupTime = now
         cleanupOrphanedImages()
     }
 
@@ -274,9 +293,8 @@ class ClipboardMonitor {
             pasteboard.writeObjects([url as NSURL])
         case .image:
             if !item.content.isEmpty,
-               let imageData = try? Data(contentsOf: URL(fileURLWithPath: item.content)),
-               let image = NSImage(data: imageData) {
-                pasteboard.writeObjects([image])
+               let imageData = try? Data(contentsOf: URL(fileURLWithPath: item.content)) {
+                pasteboard.setData(imageData, forType: .png)
             }
         }
     }
@@ -314,18 +332,25 @@ class ClipboardMonitor {
     }
 
     private func saveItems() {
-        let itemsToSave = items  // 捕获当前状态
-        let url = storageURL
-        Task.detached(priority: .utility) {
-            do {
-                let data = try JSONEncoder().encode(itemsToSave)
-                try data.write(to: url, options: .atomic)
-            } catch {
-                #if DEBUG
-                print("Failed to save clipboard history: \(error)")
-                #endif
+        // Debounce: 0.5 秒内的连续修改合并为一次写入
+        saveWorkItem?.cancel()
+        let workItem = DispatchWorkItem { [weak self] in
+            guard let self = self else { return }
+            let itemsToSave = self.items
+            let url = self.storageURL
+            Task.detached(priority: .utility) {
+                do {
+                    let data = try JSONEncoder().encode(itemsToSave)
+                    try data.write(to: url, options: .atomic)
+                } catch {
+                    #if DEBUG
+                    print("Failed to save clipboard history: \(error)")
+                    #endif
+                }
             }
         }
+        saveWorkItem = workItem
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5, execute: workItem)
     }
 
     deinit {
