@@ -36,30 +36,23 @@ final class ThumbnailCache {
     }
 
     private func loadThumbnail(for path: String) -> NSImage? {
-        // 优先加载已有的缩略图文件
-        let thumbPath = Self.thumbnailPath(for: path)
-
-        if FileManager.default.fileExists(atPath: thumbPath) {
+        // 优先加载 ClipboardMonitor 已生成的 _thumb.png（仅限 ClipboardImages 目录）
+        let url = URL(fileURLWithPath: path)
+        let thumbName = url.deletingPathExtension().lastPathComponent + "_thumb.png"
+        let thumbPath = url.deletingLastPathComponent().appendingPathComponent(thumbName).path
+        if thumbPath.contains("ClipboardImages"),
+           FileManager.default.fileExists(atPath: thumbPath) {
             return NSImage(contentsOfFile: thumbPath)
         }
 
-        // 降级：用 CGImageSource 生成缩略图，不加载原图到内存
-        return generateAndSaveThumbnail(for: path)
+        // 用 CGImageSource 生成缩略图（仅内存缓存，不写磁盘）
+        return generateThumbnailInMemory(for: path)
     }
 
-    /// 根据原图路径生成对应的缩略图路径（支持任意扩展名）
-    static func thumbnailPath(for path: String) -> String {
+    /// 用 CGImageSource 生成缩略图，仅返回 NSImage 用于内存缓存，不写入磁盘
+    private func generateThumbnailInMemory(for path: String) -> NSImage? {
         let url = URL(fileURLWithPath: path)
-        let dir = url.deletingLastPathComponent().path
-        let name = url.deletingPathExtension().lastPathComponent
-        return (dir as NSString).appendingPathComponent("\(name)_thumb.png")
-    }
-
-    /// 用 CGImageSource 生成缩略图并保存到磁盘，返回缩略图 NSImage
-    private func generateAndSaveThumbnail(for path: String) -> NSImage? {
-        let url = URL(fileURLWithPath: path)
-        let thumbSize = CGSize(width: 80, height: 80)
-        let maxPixelSize = Int(max(thumbSize.width, thumbSize.height) * 2.0)
+        let maxPixelSize = 160  // 80pt * 2x
 
         let options: [CFString: Any] = [
             kCGImageSourceCreateThumbnailFromImageAlways: true,
@@ -71,19 +64,6 @@ final class ThumbnailCache {
         guard let imageSource = CGImageSourceCreateWithURL(url as CFURL, nil),
               let cgImage = CGImageSourceCreateThumbnailAtIndex(imageSource, 0, options as CFDictionary) else {
             return nil
-        }
-
-        // 保存缩略图到磁盘
-        let thumbPath = Self.thumbnailPath(for: path)
-        let thumbURL = URL(fileURLWithPath: thumbPath)
-        if let destination = CGImageDestinationCreateWithURL(
-            thumbURL as CFURL,
-            "public.png" as CFString,
-            1,
-            nil
-        ) {
-            CGImageDestinationAddImage(destination, cgImage, nil)
-            CGImageDestinationFinalize(destination)
         }
 
         let size = NSSize(width: CGFloat(cgImage.width), height: CGFloat(cgImage.height))
