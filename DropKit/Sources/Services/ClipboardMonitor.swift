@@ -32,6 +32,14 @@ class ClipboardMonitor {
 
     let maxItems: Int = 50
 
+    private static let concealedType = NSPasteboard.PasteboardType("org.nspasteboard.ConcealedType")
+
+    private static let imageTimestampFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd_HH-mm-ss"
+        return formatter
+    }()
+
     var effectiveRetentionDays: Int {
         AppSettings.shared.clipboardRetentionDays
     }
@@ -63,21 +71,24 @@ class ClipboardMonitor {
         return result
     }
 
-    private var storageURL: URL {
+    private let storageURL: URL
+    private let imagesDirectory: URL
+
+    private static func setupDirectories() -> (storageURL: URL, imagesDirectory: URL) {
         let appSupport = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
         let dropkitDir = appSupport.appendingPathComponent("DropKit", isDirectory: true)
-        try? FileManager.default.createDirectory(at: dropkitDir, withIntermediateDirectories: true)
-        return dropkitDir.appendingPathComponent("clipboard_history.json")
-    }
-
-    private var imagesDirectory: URL {
-        let appSupport = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
-        let imagesDir = appSupport.appendingPathComponent("DropKit/ClipboardImages", isDirectory: true)
+        let imagesDir = dropkitDir.appendingPathComponent("ClipboardImages", isDirectory: true)
         try? FileManager.default.createDirectory(at: imagesDir, withIntermediateDirectories: true)
-        return imagesDir
+        return (
+            storageURL: dropkitDir.appendingPathComponent("clipboard_history.json"),
+            imagesDirectory: imagesDir
+        )
     }
 
     init() {
+        let dirs = Self.setupDirectories()
+        self.storageURL = dirs.storageURL
+        self.imagesDirectory = dirs.imagesDirectory
         loadItems()
     }
 
@@ -119,8 +130,7 @@ class ClipboardMonitor {
 
         // 2. 检查密码管理器（Concealed Type）
         guard AppSettings.shared.ignoreConcealed else { return false }
-        let concealedType = NSPasteboard.PasteboardType("org.nspasteboard.ConcealedType")
-        return pasteboard.types?.contains(concealedType) == true
+        return pasteboard.types?.contains(Self.concealedType) == true
     }
 
     private func readClipboardItem(from pasteboard: NSPasteboard) -> ClipboardItem? {
@@ -154,9 +164,7 @@ class ClipboardMonitor {
     }
 
     private func saveImageToFile(_ data: Data) -> String? {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "yyyy-MM-dd_HH-mm-ss"
-        let timestamp = formatter.string(from: Date())
+        let timestamp = Self.imageTimestampFormatter.string(from: Date())
         let uuid = UUID().uuidString.prefix(8)
         let filename = "\(timestamp)_\(uuid).png"
         let fileURL = imagesDirectory.appendingPathComponent(filename)
