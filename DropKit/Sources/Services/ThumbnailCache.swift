@@ -14,19 +14,16 @@ final class ThumbnailCache {
     func thumbnail(for path: String, completion: @escaping (NSImage?) -> Void) {
         let key = path as NSString
 
-        // 1. 检查内存缓存
         if let cached = cache.object(forKey: key) {
             completion(cached)
             return
         }
 
-        // 2. 异步加载
         loadingQueue.async { [weak self] in
-            let image = self?.loadThumbnail(for: path)
+            let image = self?.generateThumbnail(for: path)
 
             DispatchQueue.main.async {
                 if let image = image {
-                    // 传入 cost（估算像素数据大小）用于 totalCostLimit 生效
                     let cost = Int(image.size.width * image.size.height * 4)
                     self?.cache.setObject(image, forKey: key, cost: cost)
                 }
@@ -35,22 +32,13 @@ final class ThumbnailCache {
         }
     }
 
-    private func loadThumbnail(for path: String) -> NSImage? {
-        // 优先加载 ClipboardMonitor 已生成的 _thumb.png（仅限 ClipboardImages 目录）
-        let url = URL(fileURLWithPath: path)
-        let thumbName = url.deletingPathExtension().lastPathComponent + "_thumb.png"
-        let thumbPath = url.deletingLastPathComponent().appendingPathComponent(thumbName).path
-        if thumbPath.contains("ClipboardImages"),
-           FileManager.default.fileExists(atPath: thumbPath) {
-            return NSImage(contentsOfFile: thumbPath)
-        }
-
-        // 用 CGImageSource 生成缩略图（仅内存缓存，不写磁盘）
-        return generateThumbnailInMemory(for: path)
+    func store(_ image: NSImage, forPath path: String) {
+        let key = path as NSString
+        let cost = Int(image.size.width * image.size.height * 4)
+        cache.setObject(image, forKey: key, cost: cost)
     }
 
-    /// 用 CGImageSource 生成缩略图，仅返回 NSImage 用于内存缓存，不写入磁盘
-    private func generateThumbnailInMemory(for path: String) -> NSImage? {
+    private func generateThumbnail(for path: String) -> NSImage? {
         let url = URL(fileURLWithPath: path)
         let maxPixelSize = 160  // 80pt * 2x
 

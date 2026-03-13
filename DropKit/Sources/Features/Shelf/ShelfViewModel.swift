@@ -98,10 +98,11 @@ class ShelfViewModel {
     }
 
     func removeItems(byUrls urls: [URL]) {
-        for url in urls {
-            removeFromCache(url)
-        }
         let urlSet = Set(urls)
+        let itemsToRemove = items.filter { urlSet.contains($0.url) }
+        for item in itemsToRemove {
+            removeFromCache(item)
+        }
         items.removeAll { urlSet.contains($0.url) }
         if items.isEmpty {
             viewState = .collapsed
@@ -117,16 +118,6 @@ class ShelfViewModel {
         }
     }
 
-    private func removeFromCache(_ url: URL) {
-        let isSwiftUIDragCache = url.path.contains("com.apple.SwiftUI.Drag")
-        if isSwiftUIDragCache {
-            fileNames.remove(url.lastPathComponent)
-        } else if let fileID = try? url.resourceValues(forKeys: [.fileResourceIdentifierKey]).fileResourceIdentifier {
-            fileIdentifiers.remove("\(fileID)")
-        }
-    }
-
-    /// 使用缓存的标识符移除，避免重复 I/O
     private func removeFromCache(_ item: ShelfItem) {
         let isSwiftUIDragCache = item.url.path.contains("com.apple.SwiftUI.Drag")
         if isSwiftUIDragCache {

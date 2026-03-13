@@ -1,5 +1,4 @@
 import AppKit
-import UniformTypeIdentifiers
 
 enum ClipboardFilterType: String, CaseIterable {
     case all = "全部"
@@ -186,11 +185,8 @@ class ClipboardMonitor {
 
     private func generateThumbnail(for imageURL: URL) {
         Task.detached(priority: .utility) {
-            let thumbSize = CGSize(width: 80, height: 80)
-            let scale = 2.0
-            let maxPixelSize = Int(max(thumbSize.width, thumbSize.height) * scale)
+            let maxPixelSize = 160
 
-            // 使用 CGImageSource 的缩略图功能，避免加载完整图像到内存
             let options: [CFString: Any] = [
                 kCGImageSourceCreateThumbnailFromImageAlways: true,
                 kCGImageSourceCreateThumbnailWithTransform: true,
@@ -198,23 +194,17 @@ class ClipboardMonitor {
                 kCGImageSourceShouldCacheImmediately: false
             ]
 
-            guard let imageSource = CGImageSourceCreateWithURL(imageURL as CFURL, nil),
-                  let thumbnailCGImage = CGImageSourceCreateThumbnailAtIndex(imageSource, 0, options as CFDictionary) else {
+            guard let source = CGImageSourceCreateWithURL(imageURL as CFURL, nil),
+                  let cgImage = CGImageSourceCreateThumbnailAtIndex(source, 0, options as CFDictionary) else {
                 return
             }
 
-            let thumbFilename = imageURL.deletingPathExtension().lastPathComponent + "_thumb.png"
-            let thumbURL = imageURL.deletingLastPathComponent().appendingPathComponent(thumbFilename)
+            let size = NSSize(width: CGFloat(cgImage.width), height: CGFloat(cgImage.height))
+            let image = NSImage(cgImage: cgImage, size: size)
 
-            guard let destination = CGImageDestinationCreateWithURL(
-                thumbURL as CFURL,
-                UTType.png.identifier as CFString,
-                1,
-                nil
-            ) else { return }
-
-            CGImageDestinationAddImage(destination, thumbnailCGImage, nil)
-            CGImageDestinationFinalize(destination)
+            await MainActor.run {
+                ThumbnailCache.shared.store(image, forPath: imageURL.path)
+            }
         }
     }
 
@@ -277,15 +267,8 @@ class ClipboardMonitor {
             return
         }
 
-        for file in files {
-            let path = file.path
-            // 检查是否是孤立的原图或缩略图
-            let isThumb = path.contains("_thumb.png")
-            let originalPath = isThumb ? path.replacingOccurrences(of: "_thumb.png", with: ".png") : path
-
-            if !validPaths.contains(originalPath) {
-                try? FileManager.default.removeItem(at: file)
-            }
+        for file in files where !validPaths.contains(file.path) {
+            try? FileManager.default.removeItem(at: file)
         }
     }
 

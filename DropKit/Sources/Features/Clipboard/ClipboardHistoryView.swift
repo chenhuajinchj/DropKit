@@ -252,17 +252,6 @@ struct ClipboardHistoryView: View {
         }
     }
 
-    // MARK: - Footer
-
-    private var footerView: some View {
-        Text("按 Space 预览 · 按 Enter 复制")
-            .font(.system(size: 11))
-            .foregroundStyle(.secondary)
-            .frame(maxWidth: .infinity)
-            .padding(.vertical, 8)
-            .background(Color.primary.opacity(0.02))
-    }
-
     // MARK: - Toast
 
     private var toastView: some View {
