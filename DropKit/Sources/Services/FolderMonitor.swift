@@ -5,7 +5,8 @@ class FolderMonitor {
     private var source: DispatchSourceFileSystemObject?
     private var fileDescriptor: Int32 = -1
     private var knownFiles: Set<String> = []
-    private var watchedPath: String?
+    private var watchedURL: URL?
+    private var isAccessingSecurityScopedResource = false
     private let queue = DispatchQueue(label: "com.dropkit.foldermonitor", qos: .utility)
 
     /// 新文件回调
@@ -21,36 +22,42 @@ class FolderMonitor {
     }
 
     /// 开始监听指定文件夹
-    func start(path: String) {
+    func start(url: URL) {
         // 如果已经在监听同一路径，不重复启动
-        if watchedPath == path && source != nil {
+        if watchedURL == url && source != nil {
             return
         }
 
         // 停止之前的监听
         stop()
 
-        watchedPath = path
+        watchedURL = url
+
+        if url.startAccessingSecurityScopedResource() {
+            isAccessingSecurityScopedResource = true
+        }
 
         // 验证路径存在且是目录
         var isDirectory: ObjCBool = false
-        guard FileManager.default.fileExists(atPath: path, isDirectory: &isDirectory),
+        guard FileManager.default.fileExists(atPath: url.path, isDirectory: &isDirectory),
               isDirectory.boolValue else {
             #if DEBUG
-            print("FolderMonitor: 路径不存在或不是目录: \(path)")
+            print("FolderMonitor: 路径不存在或不是目录: \(url.path)")
             #endif
+            stop()
             return
         }
 
         // 初始化已知文件列表
-        knownFiles = getCurrentFiles(at: path)
+        knownFiles = getCurrentFiles(at: url)
 
         // 打开文件描述符
-        fileDescriptor = open(path, O_EVTONLY)
+        fileDescriptor = open(url.path, O_EVTONLY)
         guard fileDescriptor >= 0 else {
             #if DEBUG
-            print("FolderMonitor: 无法打开目录: \(path)")
+            print("FolderMonitor: 无法打开目录: \(url.path)")
             #endif
+            stop()
             return
         }
 
@@ -75,16 +82,21 @@ class FolderMonitor {
         source?.resume()
 
         #if DEBUG
-        print("FolderMonitor: 开始监听 \(path)")
+        print("FolderMonitor: 开始监听 \(url.path)")
         #endif
     }
 
     /// 停止监听
     func stop() {
+        let currentWatchedURL = watchedURL
         source?.cancel()
         source = nil
-        watchedPath = nil
+        watchedURL = nil
         knownFiles.removeAll()
+        if isAccessingSecurityScopedResource {
+            isAccessingSecurityScopedResource = false
+            currentWatchedURL?.stopAccessingSecurityScopedResource()
+        }
 
         #if DEBUG
         print("FolderMonitor: 停止监听")
@@ -92,8 +104,7 @@ class FolderMonitor {
     }
 
     /// 获取当前目录下的所有文件名
-    private func getCurrentFiles(at path: String) -> Set<String> {
-        let url = URL(fileURLWithPath: path)
+    private func getCurrentFiles(at url: URL) -> Set<String> {
         guard let contents = try? FileManager.default.contentsOfDirectory(
             at: url,
             includingPropertiesForKeys: nil,
@@ -106,17 +117,17 @@ class FolderMonitor {
 
     /// 处理文件系统事件
     private func handleFileSystemEvent() {
-        guard let path = watchedPath else { return }
+        guard let folderURL = watchedURL else { return }
 
         // 延迟处理，确保文件写入完成
         queue.asyncAfter(deadline: .now() + 0.3) { [weak self] in
-            self?.checkForNewFiles(at: path)
+            self?.checkForNewFiles(at: folderURL)
         }
     }
 
     /// 检查新增文件
-    private func checkForNewFiles(at path: String) {
-        let currentFiles = getCurrentFiles(at: path)
+    private func checkForNewFiles(at folderURL: URL) {
+        let currentFiles = getCurrentFiles(at: folderURL)
         let newFiles = currentFiles.subtracting(knownFiles)
 
         // 更新已知文件列表
@@ -124,7 +135,7 @@ class FolderMonitor {
 
         // 处理新文件
         for fileName in newFiles {
-            let fileURL = URL(fileURLWithPath: path).appendingPathComponent(fileName)
+            let fileURL = folderURL.appendingPathComponent(fileName)
 
             // 确保文件存在且可读
             guard FileManager.default.isReadableFile(atPath: fileURL.path) else {
@@ -145,14 +156,14 @@ class FolderMonitor {
     // MARK: - 辅助方法
 
     /// 获取 macOS 截图文件夹路径
-    static func getScreenshotFolderPath() -> String? {
+    static func getScreenshotFolderURL() -> URL? {
         // 尝试读取系统截图设置
         if let screencaptureDefaults = UserDefaults.standard.persistentDomain(forName: "com.apple.screencapture"),
            let location = screencaptureDefaults["location"] as? String {
             // 展开 ~ 路径
             let expandedPath = NSString(string: location).expandingTildeInPath
             if FileManager.default.fileExists(atPath: expandedPath) {
-                return expandedPath
+                return URL(fileURLWithPath: expandedPath, isDirectory: true)
             }
         }
 
@@ -165,7 +176,7 @@ class FolderMonitor {
 
         for path in commonPaths {
             if FileManager.default.fileExists(atPath: path) {
-                return path
+                return URL(fileURLWithPath: path, isDirectory: true)
             }
         }
 

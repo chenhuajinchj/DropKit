@@ -5,9 +5,9 @@ struct SettingsView: View {
     @Bindable var settings = AppSettings.shared
     @State private var showDeleteConfirmation = false
     @State private var showDeleteSuccess = false
-    @State private var showFolderPicker = false
     @State private var showAppPicker = false
     @State private var selectedTab = 0
+    @State private var folderSelectionError: String?
 
     var body: some View {
         VStack(spacing: 0) {
@@ -66,51 +66,18 @@ struct SettingsView: View {
 
             Section {
                 LabeledContent("当前版本") {
-                    Text(UpdateChecker.shared.currentVersion)
+                    Text(Bundle.main.shortVersionString)
                         .foregroundColor(.secondary)
                 }
 
-                HStack {
-                    Button("检查更新") {
-                        Task { await UpdateChecker.shared.checkForUpdates() }
-                    }
-                    .disabled(UpdateChecker.shared.state == .checking)
-
-                    Spacer()
-
-                    updateStatusView
-                }
-
-                Toggle("启动时自动检查", isOn: $settings.autoCheckUpdates)
+                Text("App Store 版本会通过系统商店分发更新。")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
             } header: {
                 Text("关于")
             }
         }
         .formStyle(.grouped)
-    }
-
-    @ViewBuilder
-    private var updateStatusView: some View {
-        switch UpdateChecker.shared.state {
-        case .checking:
-            ProgressView()
-                .scaleEffect(0.7)
-        case .upToDate:
-            Label("已是最新", systemImage: "checkmark.circle.fill")
-                .foregroundColor(.green)
-                .font(.caption)
-        case .available(let version, _, _):
-            Button("v\(version) 可用") {
-                UpdateChecker.shared.openDownloadPage()
-            }
-            .foregroundColor(.orange)
-        case .failed(let msg):
-            Text(msg)
-                .foregroundColor(.red)
-                .font(.caption)
-        case .idle:
-            EmptyView()
-        }
     }
 
     // MARK: - 悬浮窗设置（合并原摇晃触发 + 文件夹监听）
@@ -162,13 +129,19 @@ struct SettingsView: View {
                     }
                 }
 
-                Button("使用 macOS 截图文件夹") {
-                    if let path = FolderMonitor.getScreenshotFolderPath() {
-                        settings.watchedFolderPath = path
+                Button("选择建议的截图文件夹...") {
+                    selectFolder(suggestedURL: FolderMonitor.getScreenshotFolderURL())
+                }
+
+                if settings.watchedFolderPath != nil {
+                    Button("清除已选文件夹", role: .destructive) {
+                        settings.clearWatchedFolder()
                     }
                 }
             } header: {
                 Text("文件夹监听")
+            } footer: {
+                Text("出于沙盒限制，监听目录必须由你手动选择授权。")
             }
 
             Section {
@@ -267,6 +240,14 @@ struct SettingsView: View {
             }
         }
         .formStyle(.grouped)
+        .alert("无法保存文件夹授权", isPresented: Binding(
+            get: { folderSelectionError != nil },
+            set: { if !$0 { folderSelectionError = nil } }
+        )) {
+            Button("确定", role: .cancel) {}
+        } message: {
+            Text(folderSelectionError ?? "请选择其他文件夹后重试。")
+        }
         .alert("确认删除", isPresented: $showDeleteConfirmation) {
             Button("取消", role: .cancel) { }
             Button("删除", role: .destructive) {
@@ -291,15 +272,25 @@ struct SettingsView: View {
         return nil
     }
 
-    private func selectFolder() {
+    private func selectFolder(suggestedURL: URL? = nil) {
         let panel = NSOpenPanel()
         panel.canChooseFiles = false
         panel.canChooseDirectories = true
         panel.allowsMultipleSelection = false
         panel.message = "选择要监听的文件夹"
+        panel.directoryURL = suggestedURL
 
         if panel.runModal() == .OK, let url = panel.url {
-            settings.watchedFolderPath = url.path
+            guard settings.setWatchedFolder(url) else {
+                folderSelectionError = "DropKit 无法保存该文件夹的访问授权。"
+                return
+            }
         }
+    }
+}
+
+private extension Bundle {
+    var shortVersionString: String {
+        infoDictionary?["CFBundleShortVersionString"] as? String ?? "0.0.0"
     }
 }

@@ -34,32 +34,13 @@
 
 ### 安装说明
 
-#### 下载
+#### 分发状态
 
-从 [GitHub Releases](https://github.com/chenhuajinchj/DropKit/releases) 下载最新版本。
+DropKit 正在迁移到 Mac App Store 分发。
 
-#### 安装未签名应用
-
-由于 DropKit 未使用 Apple 开发者证书签名，macOS 会显示安全警告。安装方法如下：
-
-**方法一：右键打开**
-1. 下载 `DropKit-x.x.x.dmg` 或 `DropKit-x.x.x.zip`
-2. 如果是 DMG，打开后将 DropKit 拖到「应用程序」文件夹
-3. 如果是 ZIP，解压后将 DropKit.app 移动到「应用程序」文件夹
-4. **右键点击** DropKit.app
-5. 选择「打开」
-6. 在弹出的对话框中点击「打开」
-
-**方法二：系统设置**
-1. 尝试正常打开 DropKit（会被阻止）
-2. 打开 **系统设置 → 隐私与安全性**
-3. 向下滚动找到关于 DropKit 被阻止的提示
-4. 点击「仍要打开」
-
-**方法三：终端命令（如果上述方法无效）**
-```bash
-xattr -cr /Applications/DropKit.app
-```
+- `GitHub` 保留为源码仓库、Issue、PR 和文档协作平台
+- 面向终端用户的安装与更新将迁移到 `Mac App Store`
+- 在商店版本发布前，建议开发者通过源码构建进行评估和调试
 
 #### 授予辅助功能权限
 
@@ -141,32 +122,13 @@ A lightweight macOS menu bar utility for quick file staging and clipboard histor
 
 ### Installation
 
-#### Download
+#### Distribution Status
 
-Download the latest release from [GitHub Releases](https://github.com/chenhuajinchj/DropKit/releases).
+DropKit is being prepared for Mac App Store distribution.
 
-#### Installing Unsigned App
-
-Since DropKit is not signed with an Apple Developer certificate, macOS will show a security warning. Here's how to install:
-
-**Method 1: Right-click to Open**
-1. Download `DropKit-x.x.x.dmg` or `DropKit-x.x.x.zip`
-2. If using DMG, open it and drag DropKit to Applications
-3. If using ZIP, extract and move DropKit.app to Applications
-4. **Right-click** (or Control-click) on DropKit.app
-5. Select "Open" from the context menu
-6. Click "Open" in the dialog that appears
-
-**Method 2: System Settings**
-1. Try to open DropKit normally (it will be blocked)
-2. Go to **System Settings → Privacy & Security**
-3. Scroll down to find the message about DropKit being blocked
-4. Click "Open Anyway"
-
-**Method 3: Terminal (if above methods fail)**
-```bash
-xattr -cr /Applications/DropKit.app
-```
+- `GitHub` remains the source repository for code, issues, pull requests, and documentation
+- End-user installation and updates are intended to move to the `Mac App Store`
+- Until the store version is available, developers should build the app from source for evaluation
 
 #### Grant Accessibility Permission
 

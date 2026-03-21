@@ -2,6 +2,7 @@ import AppKit
 import KeyboardShortcuts
 import SwiftUI
 
+@MainActor
 class AppDelegate: NSObject, NSApplicationDelegate {
     var shelfPanel: ShelfPanel?
     var clipboardHistoryPanel: ClipboardHistoryPanel?
@@ -12,25 +13,26 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     let clipboardMonitor = ClipboardMonitor.shared
     let menuBarController = MenuBarController()
     let folderMonitor = FolderMonitor()
+    private var didSetupApp = false
+    private var accessibilityFeaturesEnabled = false
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         // 菜单栏必须无条件设置，确保用户始终可以访问设置和退出
         setupMenuBar()
 
-        #if DEBUG
-        // 开发模式：跳过权限检查，直接启动
         setupApp()
-        #else
-        // 正式发布：检查辅助功能权限
+
         if PermissionChecker.checkAccessibilityPermission() {
-            setupApp()
+            enableAccessibilityFeatures()
         } else {
             showPermissionGuide()
         }
-        #endif
     }
 
     private func setupApp() {
+        guard !didSetupApp else { return }
+        didSetupApp = true
+
         // 创建悬浮窗（默认隐藏）
         shelfPanel = ShelfPanel()
 
@@ -40,23 +42,21 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         // 启动剪切板监听
         clipboardMonitor.start()
 
-        setupDragAndShake()
         setupKeyboardShortcuts()
         setupFolderMonitor()
+    }
 
-        // 自动检查更新
-        if AppSettings.shared.autoCheckUpdates {
-            Task {
-                await UpdateChecker.shared.checkForUpdates()
-            }
-        }
+    private func enableAccessibilityFeatures() {
+        guard !accessibilityFeaturesEnabled else { return }
+        accessibilityFeaturesEnabled = true
+        setupDragAndShake()
     }
 
     private func showPermissionGuide() {
         permissionGuideWindow = PermissionGuideWindow()
         permissionGuideWindow?.onPermissionGranted = { [weak self] in
             self?.permissionGuideWindow = nil
-            self?.setupApp()
+            self?.enableAccessibilityFeatures()
         }
         permissionGuideWindow?.showWindow()
     }
@@ -117,8 +117,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     private func setupFolderMonitor() {
-        let settings = AppSettings.shared
-
         // 设置新文件回调
         folderMonitor.onNewFile = { [weak self] url in
             self?.handleNewFile(url)
@@ -134,8 +132,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     private func updateFolderMonitoring() {
         let settings = AppSettings.shared
 
-        if settings.folderMonitorEnabled, let path = settings.watchedFolderPath, !path.isEmpty {
-            folderMonitor.start(path: path)
+        if settings.folderMonitorEnabled, let folderURL = settings.watchedFolderURL() {
+            folderMonitor.start(url: folderURL)
         } else {
             folderMonitor.stop()
         }
@@ -150,7 +148,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                 _ = settings.folderMonitorEnabled
                 _ = settings.watchedFolderPath
             } onChange: { [weak self] in
-                DispatchQueue.main.async {
+                Task { @MainActor in
                     self?.updateFolderMonitoring()
                     observe()
                 }

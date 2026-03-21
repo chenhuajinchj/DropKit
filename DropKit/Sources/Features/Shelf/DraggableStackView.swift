@@ -69,7 +69,6 @@ class DraggableStackNSView: NSView, NSDraggingSource {
         draggedUrls = urls
 
         // 获取拖拽图像（使用已缓存的缩略图）
-        let dragImage = thumbnails.first ?? nil ?? Self.genericFileIcon
         let imageSize = NSSize(width: 80, height: 80)
 
         // 为每个文件创建拖拽项
@@ -211,7 +210,7 @@ class DraggableItemNSView: NSView, NSDraggingSource {
     }
 
     override func mouseDragged(with event: NSEvent) {
-        guard !isDragging, let url = url else { return }
+        guard !isDragging, url != nil else { return }
 
         if let startLocation = mouseDownLocation {
             let currentLocation = event.locationInWindow

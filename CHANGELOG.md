@@ -7,6 +7,39 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- Reworked watched-folder access to use sandbox-compatible bookmarks for Mac App Store submission.
+- Removed the in-app GitHub update path and updated release/distribution documentation for App Store distribution.
+- Added submission notes, privacy draft content, and stronger test coverage for folder bookmark persistence.
+
+## [1.0.5] - 2026-03-21
+
+### Fixed
+- Eliminated disk writes during thumbnail generation to avoid feedback loops in watched folders.
+- Improved sandbox readiness for folder monitoring and App Store distribution.
+
+## [1.0.4] - 2026-03-13
+
+### Fixed
+- Reduced repeated object creation and unnecessary I/O in clipboard handling.
+- Prevented `ThumbnailCache` from creating an infinite loop when the watched folder changed.
+
+## [1.0.3] - 2026-03-07
+
+### Fixed
+- Fixed the search field so Chinese IME space-selection no longer triggers preview unexpectedly.
+
+## [1.0.2] - 2026-02-06
+
+### Changed
+- Refined the settings layout for a clearer preferences experience.
+
+### Added
+- Added update-checker infrastructure and simplified HTML clipboard conversion.
+
+### Fixed
+- Removed the status item from the expanded shelf view for a cleaner workspace.
+
 ## [1.0.0] - 2026-02-04
 
 ### Added
