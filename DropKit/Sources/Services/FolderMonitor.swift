@@ -9,6 +9,10 @@ class FolderMonitor {
     private var isAccessingSecurityScopedResource = false
     private let queue = DispatchQueue(label: "com.dropkit.foldermonitor", qos: .utility)
 
+    /// 每次 start / stop 都会 +1。用于让 queue 上 asyncAfter 的延迟任务自行作废，
+    /// 防止"0.3s 窗口内 stop → start 新目录"导致旧任务污染新状态。
+    private var generation: UInt64 = 0
+
     /// 新文件回调
     var onNewFile: ((URL) -> Void)?
 
@@ -31,6 +35,7 @@ class FolderMonitor {
         // 停止之前的监听
         stop()
 
+        generation &+= 1
         watchedURL = url
 
         if url.startAccessingSecurityScopedResource() {
@@ -89,6 +94,7 @@ class FolderMonitor {
     /// 停止监听
     func stop() {
         let currentWatchedURL = watchedURL
+        generation &+= 1
         source?.cancel()
         source = nil
         watchedURL = nil
@@ -118,15 +124,20 @@ class FolderMonitor {
     /// 处理文件系统事件
     private func handleFileSystemEvent() {
         guard let folderURL = watchedURL else { return }
+        let currentGen = generation
 
         // 延迟处理，确保文件写入完成
         queue.asyncAfter(deadline: .now() + 0.3) { [weak self] in
-            self?.checkForNewFiles(at: folderURL)
+            guard let self, self.generation == currentGen else { return }
+            self.checkForNewFiles(at: folderURL, generation: currentGen)
         }
     }
 
     /// 检查新增文件
-    private func checkForNewFiles(at folderURL: URL) {
+    private func checkForNewFiles(at folderURL: URL, generation expectedGen: UInt64) {
+        // 再次校验 generation：queue 上执行期间可能已经 stop
+        guard self.generation == expectedGen else { return }
+
         let currentFiles = getCurrentFiles(at: folderURL)
         let newFiles = currentFiles.subtracting(knownFiles)
 
@@ -146,9 +157,10 @@ class FolderMonitor {
             print("FolderMonitor: 检测到新文件 \(fileName)")
             #endif
 
-            // 在主线程回调
+            // 在主线程回调前再次校验 generation
             DispatchQueue.main.async { [weak self] in
-                self?.onNewFile?(fileURL)
+                guard let self, self.generation == expectedGen else { return }
+                self.onNewFile?(fileURL)
             }
         }
     }
