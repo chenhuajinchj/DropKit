@@ -5,10 +5,21 @@ final class ThumbnailCache {
 
     private let cache = NSCache<NSString, NSImage>()
     private let loadingQueue = DispatchQueue(label: "com.dropkit.thumbnail", qos: .userInitiated)
+    private let memoryPressureSource: DispatchSourceMemoryPressure
 
     private init() {
         cache.countLimit = 100  // 最多缓存 100 张
         cache.totalCostLimit = 50 * 1024 * 1024  // 最多 50MB
+
+        // 订阅系统内存压力：警告 / 严重时清空缓存，让 NSCache 主动释放
+        memoryPressureSource = DispatchSource.makeMemoryPressureSource(
+            eventMask: [.warning, .critical],
+            queue: .main
+        )
+        memoryPressureSource.setEventHandler { [weak self] in
+            self?.cache.removeAllObjects()
+        }
+        memoryPressureSource.resume()
     }
 
     func thumbnail(for path: String, completion: @escaping (NSImage?) -> Void) {
