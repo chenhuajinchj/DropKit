@@ -21,7 +21,8 @@ struct ShelfItem: Identifiable {
     let id = UUID()
     let url: URL
     let name: String
-    var thumbnail: NSImage?
+    var thumbnail: NSImage?        // grid / collapsed / 拖拽用，较大尺寸
+    var listThumbnail: NSImage?    // list 用，较小尺寸
     var fileSize: Int64
     var dimensions: CGSize?
     var fileType: FileType
@@ -31,6 +32,7 @@ struct ShelfItem: Identifiable {
         self.url = url
         self.name = url.lastPathComponent
         self.thumbnail = nil
+        self.listThumbnail = nil
         self.fileSize = 0
         self.dimensions = nil
         // 快速判断文件类型（仅基于扩展名，不读取文件）

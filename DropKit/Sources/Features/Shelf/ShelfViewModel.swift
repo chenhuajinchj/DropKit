@@ -26,11 +26,24 @@ class ShelfViewModel {
     private var fileIdentifiers = Set<String>()
     private var fileNames = Set<String>()  // 用于 SwiftUI 临时文件
 
-    // 缩略图加载任务引用，用于取消
-    private var thumbnailTasks: [UUID: Task<Void, Never>] = [:]
+    // 缩略图加载任务引用，key = "\(uuid)-\(kind)"，允许同一 item 的大小图并行加载
+    private var thumbnailTasks: [String: Task<Void, Never>] = [:]
 
     // 最大文件数限制，防止内存溢出
     private let maxItems = 100
+
+    // 缩略图规格：grid / collapsed / 拖拽用大图；list 用小图
+    enum ThumbnailKind {
+        case large   // 200×200，给 grid、collapsed、拖拽
+        case small   // 64×64，给 list
+
+        var size: CGSize {
+            switch self {
+            case .large: return CGSize(width: 200, height: 200)
+            case .small: return CGSize(width: 64, height: 64)
+            }
+        }
+    }
 
     // MARK: - Item Management
 
@@ -69,7 +82,9 @@ class ShelfViewModel {
 
         let item = ShelfItem(url: url)
         items.insert(item, at: 0)  // 新文件插入到开头，最新的显示在最前
-        loadThumbnail(for: 0)
+        // 不再立即生成缩略图；由 cell.onAppear 按需触发 ensureThumbnail。
+        // 但 fileSize/dimensions 仍需尽快加载，首次显示时立即可用。
+        loadFileInfo(for: item.id)
 
         // 超出限制时移除最早的项（现在是数组末尾）
         while items.count > maxItems {
@@ -85,9 +100,8 @@ class ShelfViewModel {
     }
 
     func removeItem(_ item: ShelfItem) {
-        // 取消缩略图加载任务
-        thumbnailTasks[item.id]?.cancel()
-        thumbnailTasks.removeValue(forKey: item.id)
+        // 取消缩略图加载任务（大图 + 小图）
+        cancelAllThumbnailTasks(for: item.id)
         // 从缓存中移除
         removeFromCache(item)
         items.removeAll { $0.id == item.id }
@@ -95,6 +109,21 @@ class ShelfViewModel {
         if items.isEmpty {
             viewState = .collapsed
         }
+    }
+
+    private func cancelAllThumbnailTasks(for itemId: UUID) {
+        for kind in [ThumbnailKind.large, .small] {
+            let key = thumbnailTaskKey(itemId: itemId, kind: kind)
+            thumbnailTasks[key]?.cancel()
+            thumbnailTasks.removeValue(forKey: key)
+        }
+        // 文件信息任务
+        thumbnailTasks["\(itemId)-info"]?.cancel()
+        thumbnailTasks.removeValue(forKey: "\(itemId)-info")
+    }
+
+    private func thumbnailTaskKey(itemId: UUID, kind: ThumbnailKind) -> String {
+        "\(itemId)-\(kind == .large ? "L" : "S")"
     }
 
     func removeItems(byUrls urls: [URL]) {
@@ -137,6 +166,22 @@ class ShelfViewModel {
         fileIdentifiers.removeAll()
         fileNames.removeAll()
         viewState = .collapsed
+    }
+
+    func deleteSelected() {
+        let idsToRemove = selectedItemIds
+        for id in idsToRemove {
+            cancelAllThumbnailTasks(for: id)
+            if let item = items.first(where: { $0.id == id }) {
+                removeFromCache(item)
+            }
+        }
+        items.removeAll { idsToRemove.contains($0.id) }
+        selectedItemIds.removeAll()
+        lastSelectedId = nil
+        if items.isEmpty {
+            viewState = .collapsed
+        }
     }
 
     // MARK: - Statistics
@@ -193,48 +238,78 @@ class ShelfViewModel {
 
     // MARK: - Thumbnail Loading
 
-    private func loadThumbnail(for index: Int) {
-        guard items.indices.contains(index) else { return }
+    /// 确保指定 item 在指定规格上的缩略图已生成（由 cell.onAppear 调用）。
+    /// 如果已有对应规格的缩略图，或任务正在进行中，则跳过。
+    func ensureThumbnail(for itemId: UUID, kind: ThumbnailKind) {
+        guard let index = items.firstIndex(where: { $0.id == itemId }) else { return }
         let item = items[index]
-        let itemId = item.id
 
-        // 取消之前的任务（如果存在）
-        thumbnailTasks[itemId]?.cancel()
+        // 已有对应规格的缩略图，跳过
+        switch kind {
+        case .large where item.thumbnail != nil: return
+        case .small where item.listThumbnail != nil: return
+        default: break
+        }
+
+        let taskKey = thumbnailTaskKey(itemId: itemId, kind: kind)
+        if thumbnailTasks[taskKey] != nil { return }  // 已有进行中任务
+
+        let url = item.url
+        let size = kind.size
+        let scale = NSScreen.main?.backingScaleFactor ?? 2.0
 
         let task = Task {
-            // 并行加载缩略图和文件信息
-            async let thumbnailTask = generateThumbnail(for: item.url)
-            async let fileInfoTask = ShelfItem.loadFileInfo(for: item.url, fileType: item.fileType)
-
-            let thumbnail = await thumbnailTask
-            let fileInfo = await fileInfoTask
-
-            // 检查任务是否被取消
+            let thumbnail = await Self.generateThumbnail(for: url, size: size, scale: scale)
             guard !Task.isCancelled else { return }
 
             await MainActor.run {
-                // 确保 item 还在且位置正确
-                if let currentIndex = self.items.firstIndex(where: { $0.id == itemId }) {
+                guard let currentIndex = self.items.firstIndex(where: { $0.id == itemId }) else { return }
+                switch kind {
+                case .large:
                     self.items[currentIndex].thumbnail = thumbnail
+                case .small:
+                    self.items[currentIndex].listThumbnail = thumbnail
+                }
+                self.thumbnailTasks.removeValue(forKey: taskKey)
+            }
+        }
+        thumbnailTasks[taskKey] = task
+    }
+
+    /// cell.onDisappear 调用：取消某个 item 某个规格的待办任务。
+    /// 已生成的缩略图仍保留在 item 上，不清除（避免来回滚动反复生成）。
+    func cancelThumbnailTask(for itemId: UUID, kind: ThumbnailKind) {
+        let taskKey = thumbnailTaskKey(itemId: itemId, kind: kind)
+        thumbnailTasks[taskKey]?.cancel()
+        thumbnailTasks.removeValue(forKey: taskKey)
+    }
+
+    /// addItem 时触发，异步拉取文件大小/尺寸；缩略图不在这里生成。
+    private func loadFileInfo(for itemId: UUID) {
+        guard let index = items.firstIndex(where: { $0.id == itemId }) else { return }
+        let item = items[index]
+        let taskKey = "\(itemId)-info"
+        thumbnailTasks[taskKey]?.cancel()
+
+        let task = Task {
+            let fileInfo = await ShelfItem.loadFileInfo(for: item.url, fileType: item.fileType)
+            guard !Task.isCancelled else { return }
+            await MainActor.run {
+                if let currentIndex = self.items.firstIndex(where: { $0.id == itemId }) {
                     self.items[currentIndex].fileSize = fileInfo.fileSize
                     self.items[currentIndex].dimensions = fileInfo.dimensions
                 }
-                // 清理任务引用
-                self.thumbnailTasks.removeValue(forKey: itemId)
+                self.thumbnailTasks.removeValue(forKey: taskKey)
             }
         }
-
-        thumbnailTasks[itemId] = task
+        thumbnailTasks[taskKey] = task
     }
 
-    private func generateThumbnail(for url: URL) async -> NSImage? {
-        let size = CGSize(width: 120, height: 120)
-
-        // 使用新的 QLThumbnailGenerator API
+    private static func generateThumbnail(for url: URL, size: CGSize, scale: CGFloat) async -> NSImage? {
         let request = QLThumbnailGenerator.Request(
             fileAt: url,
             size: size,
-            scale: NSScreen.main?.backingScaleFactor ?? 2.0,
+            scale: scale,
             representationTypes: .thumbnail
         )
 
@@ -242,7 +317,6 @@ class ShelfViewModel {
             let thumbnail = try await QLThumbnailGenerator.shared.generateBestRepresentation(for: request)
             return NSImage(cgImage: thumbnail.cgImage, size: size)
         } catch {
-            // 回退到系统图标
             let icon = NSWorkspace.shared.icon(forFile: url.path)
             icon.size = size
             return icon
@@ -309,21 +383,4 @@ class ShelfViewModel {
         lastSelectedId = nil
     }
 
-    func deleteSelected() {
-        let idsToRemove = selectedItemIds
-        for id in idsToRemove {
-            // 取消缩略图加载任务
-            thumbnailTasks[id]?.cancel()
-            thumbnailTasks.removeValue(forKey: id)
-            if let item = items.first(where: { $0.id == id }) {
-                removeFromCache(item)
-            }
-        }
-        items.removeAll { idsToRemove.contains($0.id) }
-        selectedItemIds.removeAll()
-        lastSelectedId = nil
-        if items.isEmpty {
-            viewState = .collapsed
-        }
-    }
 }

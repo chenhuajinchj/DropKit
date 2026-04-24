@@ -147,6 +147,17 @@ struct CollapsedShelfView: View {
             )
         }
         .frame(height: 136)
+        .onAppear(perform: ensureTopThumbnails)
+        .onChange(of: viewModel.items.prefix(3).map(\.id)) { _, _ in
+            ensureTopThumbnails()
+        }
+    }
+
+    private func ensureTopThumbnails() {
+        // Collapsed 视图只显示前 3 张，按需触发大图生成
+        for item in viewModel.items.prefix(3) {
+            viewModel.ensureThumbnail(for: item.id, kind: .large)
+        }
     }
 
     private func thumbnailCard(for item: ShelfItem) -> some View {
@@ -352,7 +363,7 @@ struct ExpandedShelfView: View {
         ScrollView {
             LazyVGrid(columns: [GridItem(.adaptive(minimum: 100), spacing: 16)], spacing: 16) {
                 ForEach(viewModel.items) { item in
-                    GridItemView(item: item, viewModel: viewModel)
+                    gridItem(for: item)
                 }
 
                 // 垃圾桶删除区域
@@ -360,6 +371,31 @@ struct ExpandedShelfView: View {
             }
             .padding(16)
         }
+    }
+
+    private func gridItem(for item: ShelfItem) -> GridItemView {
+        let vm = viewModel
+        let itemId = item.id
+        return GridItemView(
+            item: item,
+            isSelected: vm.selectedItemIds.contains(item.id),
+            getSelectionCount: { vm.selectedItemIds.count },
+            getSelectedUrls: {
+                vm.selectedItemIds.isEmpty ? [item.url] : vm.selectedUrls
+            },
+            getSelectedThumbnails: {
+                vm.selectedItemIds.isEmpty ? [item.thumbnail] : vm.selectedThumbnails
+            },
+            onRemove: { vm.removeItem(item) },
+            onDeleteSelected: { vm.deleteSelected() },
+            onToggleSelection: { flags in
+                vm.toggleSelection(item.id, modifierFlags: flags)
+            },
+            onShowInFinder: { vm.showInFinder(item) },
+            onDragEnd: { urls in vm.removeItems(byUrls: urls) },
+            onAppearThumbnail: { vm.ensureThumbnail(for: itemId, kind: .large) },
+            onDisappearThumbnail: { vm.cancelThumbnailTask(for: itemId, kind: .large) }
+        )
     }
 
     private var trashDropZone: some View {
@@ -372,11 +408,36 @@ struct ExpandedShelfView: View {
         ScrollView {
             LazyVStack(spacing: 8) {
                 ForEach(viewModel.items) { item in
-                    ListItemView(item: item, viewModel: viewModel)
+                    listItem(for: item)
                 }
             }
             .padding(16)
         }
+    }
+
+    private func listItem(for item: ShelfItem) -> ListItemView {
+        let vm = viewModel
+        let itemId = item.id
+        return ListItemView(
+            item: item,
+            isSelected: vm.selectedItemIds.contains(item.id),
+            getSelectionCount: { vm.selectedItemIds.count },
+            getSelectedUrls: {
+                vm.selectedItemIds.isEmpty ? [item.url] : vm.selectedUrls
+            },
+            getSelectedThumbnails: {
+                vm.selectedItemIds.isEmpty ? [item.thumbnail] : vm.selectedThumbnails
+            },
+            onRemove: { vm.removeItem(item) },
+            onDeleteSelected: { vm.deleteSelected() },
+            onToggleSelection: { flags in
+                vm.toggleSelection(item.id, modifierFlags: flags)
+            },
+            onShowInFinder: { vm.showInFinder(item) },
+            onDragEnd: { urls in vm.removeItems(byUrls: urls) },
+            onAppearThumbnail: { vm.ensureThumbnail(for: itemId, kind: .small) },
+            onDisappearThumbnail: { vm.cancelThumbnailTask(for: itemId, kind: .small) }
+        )
     }
 }
 
@@ -384,47 +445,42 @@ struct ExpandedShelfView: View {
 
 struct GridItemView: View {
     let item: ShelfItem
-    var viewModel: ShelfViewModel
+    let isSelected: Bool
+    let getSelectionCount: () -> Int
+    let getSelectedUrls: () -> [URL]
+    let getSelectedThumbnails: () -> [NSImage?]
+    let onRemove: () -> Void
+    let onDeleteSelected: () -> Void
+    let onToggleSelection: (NSEvent.ModifierFlags) -> Void
+    let onShowInFinder: () -> Void
+    let onDragEnd: ([URL]) -> Void
+    let onAppearThumbnail: () -> Void
+    let onDisappearThumbnail: () -> Void
     @State private var isHovered = false
-
-    private var isSelected: Bool {
-        viewModel.isSelected(item)
-    }
 
     var body: some View {
         DraggableItemView(
             url: item.url,
             thumbnail: item.thumbnail,
-            getSelectedUrls: {
-                viewModel.selectedItemIds.isEmpty ? [item.url] : viewModel.selectedUrls
-            },
-            getSelectedThumbnails: {
-                viewModel.selectedItemIds.isEmpty ? [item.thumbnail] : viewModel.selectedThumbnails
-            },
-            isSelected: {
-                viewModel.selectedItemIds.contains(item.id)
-            },
-            onDragEnd: { draggedUrls in
-                viewModel.removeItems(byUrls: draggedUrls)
-            }
+            getSelectedUrls: getSelectedUrls,
+            getSelectedThumbnails: getSelectedThumbnails,
+            isSelected: { isSelected },
+            onDragEnd: onDragEnd
         ) {
             gridItemContent
         }
         .contextMenu {
-            Button("在 Finder 中显示") {
-                viewModel.showInFinder(item)
-            }
+            Button("在 Finder 中显示", action: onShowInFinder)
             Divider()
-            if isSelected && viewModel.selectedItemIds.count > 1 {
-                Button("删除选中的 \(viewModel.selectedItemIds.count) 个文件", role: .destructive) {
-                    viewModel.deleteSelected()
-                }
+            let count = getSelectionCount()
+            if isSelected && count > 1 {
+                Button("删除选中的 \(count) 个文件", role: .destructive, action: onDeleteSelected)
             } else {
-                Button("删除", role: .destructive) {
-                    viewModel.removeItem(item)
-                }
+                Button("删除", role: .destructive, action: onRemove)
             }
         }
+        .onAppear(perform: onAppearThumbnail)
+        .onDisappear(perform: onDisappearThumbnail)
     }
 
     private var gridItemContent: some View {
@@ -452,9 +508,7 @@ struct GridItemView: View {
                 if isHovered && !isSelected {
                     HStack {
                         Spacer()
-                        Button {
-                            viewModel.removeItem(item)
-                        } label: {
+                        Button(action: onRemove) {
                             Image(systemName: "xmark")
                                 .font(.system(size: 8, weight: .bold))
                                 .foregroundStyle(.white)
@@ -503,7 +557,7 @@ struct GridItemView: View {
             isHovered = hovering
         }
         .onTapGesture {
-            viewModel.toggleSelection(item.id, modifierFlags: NSEvent.modifierFlags)
+            onToggleSelection(NSEvent.modifierFlags)
         }
     }
 }
@@ -512,53 +566,48 @@ struct GridItemView: View {
 
 struct ListItemView: View {
     let item: ShelfItem
-    var viewModel: ShelfViewModel
+    let isSelected: Bool
+    let getSelectionCount: () -> Int
+    let getSelectedUrls: () -> [URL]
+    let getSelectedThumbnails: () -> [NSImage?]
+    let onRemove: () -> Void
+    let onDeleteSelected: () -> Void
+    let onToggleSelection: (NSEvent.ModifierFlags) -> Void
+    let onShowInFinder: () -> Void
+    let onDragEnd: ([URL]) -> Void
+    let onAppearThumbnail: () -> Void
+    let onDisappearThumbnail: () -> Void
     @State private var isHovered = false
-
-    private var isSelected: Bool {
-        viewModel.isSelected(item)
-    }
 
     var body: some View {
         DraggableItemView(
             url: item.url,
-            thumbnail: item.thumbnail,
-            getSelectedUrls: {
-                viewModel.selectedItemIds.isEmpty ? [item.url] : viewModel.selectedUrls
-            },
-            getSelectedThumbnails: {
-                viewModel.selectedItemIds.isEmpty ? [item.thumbnail] : viewModel.selectedThumbnails
-            },
-            isSelected: {
-                viewModel.selectedItemIds.contains(item.id)
-            },
-            onDragEnd: { draggedUrls in
-                viewModel.removeItems(byUrls: draggedUrls)
-            }
+            thumbnail: item.listThumbnail ?? item.thumbnail,
+            getSelectedUrls: getSelectedUrls,
+            getSelectedThumbnails: getSelectedThumbnails,
+            isSelected: { isSelected },
+            onDragEnd: onDragEnd
         ) {
             listItemContent
         }
         .contextMenu {
-            Button("在 Finder 中显示") {
-                viewModel.showInFinder(item)
-            }
+            Button("在 Finder 中显示", action: onShowInFinder)
             Divider()
-            if isSelected && viewModel.selectedItemIds.count > 1 {
-                Button("删除选中的 \(viewModel.selectedItemIds.count) 个文件", role: .destructive) {
-                    viewModel.deleteSelected()
-                }
+            let count = getSelectionCount()
+            if isSelected && count > 1 {
+                Button("删除选中的 \(count) 个文件", role: .destructive, action: onDeleteSelected)
             } else {
-                Button("删除", role: .destructive) {
-                    viewModel.removeItem(item)
-                }
+                Button("删除", role: .destructive, action: onRemove)
             }
         }
+        .onAppear(perform: onAppearThumbnail)
+        .onDisappear(perform: onDisappearThumbnail)
     }
 
     private var listItemContent: some View {
         HStack(spacing: 10) {
-            // 缩略图
-            if let thumbnail = item.thumbnail {
+            // 缩略图（优先用小图，没有则降级用大图）
+            if let thumbnail = item.listThumbnail ?? item.thumbnail {
                 Image(nsImage: thumbnail)
                     .resizable()
                     .aspectRatio(contentMode: .fill)
@@ -596,9 +645,7 @@ struct ListItemView: View {
             }
 
             // 删除按钮
-            Button {
-                viewModel.removeItem(item)
-            } label: {
+            Button(action: onRemove) {
                 Image(systemName: "xmark.circle.fill")
                     .font(.system(size: 14))
                     .foregroundStyle(.secondary)
@@ -620,7 +667,7 @@ struct ListItemView: View {
             isHovered = hovering
         }
         .onTapGesture {
-            viewModel.toggleSelection(item.id, modifierFlags: NSEvent.modifierFlags)
+            onToggleSelection(NSEvent.modifierFlags)
         }
     }
 }
