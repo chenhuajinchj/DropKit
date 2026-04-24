@@ -7,10 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.6] - 2026-04-24
+
 ### Changed
 - Reworked watched-folder access to use sandbox-compatible bookmarks for Mac App Store submission.
 - Removed the in-app GitHub update path and updated release/distribution documentation for App Store distribution.
 - Added submission notes, privacy draft content, and stronger test coverage for folder bookmark persistence.
+- Decoupled shelf grid/list cells from the view model and lazy-load thumbnails on cell appearance to reduce SwiftUI re-renders during selection changes.
+- Sized shelf thumbnails by display mode (200×200 for grid/collapsed/drag, 64×64 for list) to avoid oversized image decoding.
+
+### Fixed
+- Added a generation token to FolderMonitor so stale delayed checks after stop/start cannot mis-report files from a previous folder.
+- ThumbnailCache now drops its contents on system memory pressure (warning/critical) instead of only relying on NSCache's internal limits.
 
 ## [1.0.5] - 2026-03-21
 
