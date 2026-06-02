@@ -56,7 +56,7 @@ DropKit is being prepared for Mac App Store distribution. Until the store versio
 ### Build from Source
 
 ```bash
-git clone https://github.com/chenhuajinchj/DropKit.git
+git clone https://github.com/chenyuxiaojin/DropKit.git
 cd DropKit/DropKit
 xcodegen generate          # generates DropKit.xcodeproj from project.yml
 xcodebuild -scheme DropKit -configuration Release build

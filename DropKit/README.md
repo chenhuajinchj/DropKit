@@ -18,7 +18,7 @@ macOS 菜单栏应用，提供文件暂存架和剪贴板历史功能。
 
 ## 安装
 
-从 [Releases](https://github.com/chenhuajinchj/DropKit/releases) 下载最新版本。
+从 [Releases](https://github.com/chenyuxiaojin/DropKit/releases) 下载最新版本。
 
 ## 许可证
 

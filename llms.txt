@@ -9,5 +9,5 @@ DropKit is an open-source macOS app for developers and power users who frequentl
 - [中文文档 (README.zh-CN.md)](README.zh-CN.md): 功能介绍、安装说明、使用方法、常见问题及同类对比（中文版）。
 
 ## Links
-- Repository: https://github.com/chenhuajinchj/DropKit
-- Releases: https://github.com/chenhuajinchj/DropKit/releases
+- Repository: https://github.com/chenyuxiaojin/DropKit
+- Releases: https://github.com/chenyuxiaojin/DropKit/releases
