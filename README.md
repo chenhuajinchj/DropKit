@@ -1,177 +1,159 @@
+**English** | [中文文档](README.zh-CN.md)
+
 # DropKit
 
-> [English](#english) | [中文](#中文)
+> DropKit is a macOS menu bar utility with a shake-to-summon floating file shelf and a searchable clipboard history.
+
+![License](https://img.shields.io/badge/license-MIT-blue.svg)
+![Platform](https://img.shields.io/badge/platform-macOS%2014%2B-lightgrey.svg)
+![Version](https://img.shields.io/badge/version-1.0.6-green.svg)
+
+![DropKit demo](DropKit/demo.gif)
 
 ---
 
-## 中文
+## Why DropKit?
 
-一款轻量级 macOS 菜单栏工具，用于快速文件暂存和剪贴板历史管理。
+Moving files between apps on macOS has always been awkward: open Finder, arrange windows, drag across — all while losing your place in the app you were using. DropKit solves this with a floating shelf you summon by shaking your mouse mid-drag, so you never need to break your workflow. A persistent clipboard history panel pairs with the shelf so copied text, images, and files are always a keystroke away.
 
-### 功能特性
+---
 
-#### 文件暂存架 (Shelf)
-- 拖拽文件时摇晃鼠标，即可唤出悬浮暂存架
-- 临时存放文件，随时拖出使用
-- 支持宫格和列表两种视图模式
+## Features
 
-#### 剪贴板历史
-- 自动监控剪贴板变化
-- 支持文本、图片、文件和链接
-- 搜索和置顶功能
-- 隐私模式（暂停监控）
-- 按空格键快速预览内容
+### Floating File Shelf
+- Shake your mouse left-right while dragging a file to summon the shelf instantly
+- Drop files onto the shelf for temporary staging; drag them out to any destination when ready
+- Grid and list view modes
+- Collapses to a compact overlay; expand to see all staged files
 
-#### 菜单栏集成
-- 菜单栏快速访问
-- 全局键盘快捷键
-- 资源占用极低
+### Clipboard History
+- Automatic clipboard monitoring — text, images, files, and URLs are captured as you copy
+- Full-text search across your history
+- Pin important items so they are never pushed out
+- Press Space to quick-look the selected item
+- Configurable item limit and retention period (Settings → Clipboard)
+- Respects password-manager concealed-type entries and an app blacklist — those are never saved
 
-### 系统要求
+### Menu Bar Integration
+- Persistent menu bar icon for instant access
+- Global keyboard shortcuts work from any app
+- Runs as a background agent (no Dock icon)
 
-- macOS 14.0 (Sonoma) 或更高版本
-- 辅助功能权限（用于检测鼠标摇晃手势）
+---
 
-### 安装说明
+## Quick Start / Installation
 
-#### 分发状态
+DropKit is being prepared for Mac App Store distribution. Until the store version is available, build from source:
 
-DropKit 正在迁移到 Mac App Store 分发。
+### Prerequisites
 
-- `GitHub` 保留为源码仓库、Issue、PR 和文档协作平台
-- 面向终端用户的安装与更新将迁移到 `Mac App Store`
-- 在商店版本发布前，建议开发者通过源码构建进行评估和调试
+| Requirement | Version |
+|-------------|---------|
+| macOS | 14.0 (Sonoma) or later |
+| Xcode | 15.0 or later |
+| XcodeGen | latest (`brew install xcodegen`) |
 
-#### 授予辅助功能权限
-
-DropKit 需要辅助功能权限来检测鼠标摇晃手势：
-
-1. 打开 **系统设置 → 隐私与安全性 → 辅助功能**
-2. 点击锁图标并验证身份
-3. 在列表中启用 DropKit
-4. 重启 DropKit 使更改生效
-
-### 使用方法
-
-#### 暂存架
-- **唤出**：拖拽文件时左右摇晃鼠标
-- **添加文件**：将文件拖放到暂存架上
-- **使用文件**：从暂存架拖出文件到任意位置
-- **展开视图**：点击展开按钮查看所有文件
-
-#### 剪贴板历史
-- **打开**：点击菜单栏图标 →「剪贴板历史」或按 `⌘⇧V`
-- **粘贴项目**：点击任意项目或按回车键
-- **搜索**：输入文字筛选项目
-- **预览**：按空格键预览选中项目
-- **置顶项目**：右键 → 置顶
-- **删除项目**：右键 → 删除
-
-#### 快捷键
-
-| 操作 | 快捷键 |
-|------|--------|
-| 打开剪贴板历史 | `⌘⇧V` |
-| 切换暂存架 | `⌘⇧S` |
-| 打开设置 | `⌘,` |
-| 退出 | `⌘Q` |
-
-### 从源码构建
+### Build from Source
 
 ```bash
 git clone https://github.com/chenhuajinchj/DropKit.git
 cd DropKit/DropKit
+xcodegen generate          # generates DropKit.xcodeproj from project.yml
 xcodebuild -scheme DropKit -configuration Release build
 ```
 
-### 许可证
+The built `.app` appears in `build/Release/DropKit.app`. Move it to `/Applications` and launch.
 
-MIT License - 详见 [LICENSE](LICENSE)
+### Grant Accessibility Permission
 
----
-
-## English
-
-A lightweight macOS menu bar utility for quick file staging and clipboard history management.
-
-### Features
-
-#### Shelf (File Staging)
-- Shake your mouse while dragging files to summon a floating shelf
-- Drop files temporarily for quick access
-- Drag files out to any destination
-- Grid and list view modes
-
-#### Clipboard History
-- Automatic clipboard monitoring
-- Support for text, images, files, and URLs
-- Search through clipboard history
-- Pin important items
-- Privacy mode to pause monitoring
-- Press Space to preview content
-
-#### Menu Bar Integration
-- Quick access from menu bar
-- Keyboard shortcuts for all features
-- Minimal resource usage
-
-### System Requirements
-
-- macOS 14.0 (Sonoma) or later
-- Accessibility permission (for mouse shake detection)
-
-### Installation
-
-#### Distribution Status
-
-DropKit is being prepared for Mac App Store distribution.
-
-- `GitHub` remains the source repository for code, issues, pull requests, and documentation
-- End-user installation and updates are intended to move to the `Mac App Store`
-- Until the store version is available, developers should build the app from source for evaluation
-
-#### Grant Accessibility Permission
-
-DropKit needs accessibility permission to detect mouse shake gestures:
+DropKit needs Accessibility permission to detect mouse shake gestures:
 
 1. Open **System Settings → Privacy & Security → Accessibility**
 2. Click the lock icon and authenticate
 3. Enable DropKit in the list
-4. Restart DropKit for changes to take effect
+4. Restart DropKit for the change to take effect
 
-### Usage
+Without this permission the shelf shake-summon feature is unavailable; clipboard history still works.
 
-#### Shelf
-- **Summon**: Shake your mouse left-right while dragging a file
-- **Add files**: Drop files onto the shelf
-- **Use files**: Drag files out of the shelf to any destination
-- **Expand view**: Click the expand button to see all files
+---
 
-#### Clipboard History
-- **Open**: Click menu bar icon → "Clipboard History" or press `⌘⇧V`
-- **Paste item**: Click on any item or press Enter
-- **Search**: Type to filter items
-- **Preview**: Press Space to preview selected item
-- **Pin item**: Right-click → Pin
-- **Delete item**: Right-click → Delete
+## Usage
 
-#### Keyboard Shortcuts
+### Keyboard Shortcuts
 
 | Action | Shortcut |
 |--------|----------|
-| Open Clipboard History | `⌘⇧V` |
 | Toggle Shelf | `⌘⇧S` |
+| Open Clipboard History | `⌘⇧V` |
 | Open Settings | `⌘,` |
 | Quit | `⌘Q` |
 
-### Building from Source
+### Shelf
 
-```bash
-git clone https://github.com/chenhuajinchj/DropKit.git
-cd DropKit/DropKit
-xcodebuild -scheme DropKit -configuration Release build
-```
+- **Summon**: Shake your mouse left-right while dragging a file
+- **Add files**: Drop files onto the shelf while it is visible
+- **Use files**: Drag files out of the shelf to any destination
+- **Expand view**: Click the expand button to see all staged files
+- **Keyboard**: Press `⌘⇧S` at any time to show or hide the shelf
 
-### License
+### Clipboard History
 
-MIT License - see [LICENSE](LICENSE) for details.
+- **Open**: Click the menu bar icon → "Clipboard History", or press `⌘⇧V`
+- **Paste an item**: Click it or press Return
+- **Search**: Type to filter items in real time
+- **Preview**: Press Space to Quick Look the selected item
+- **Pin**: Right-click → Pin (pinned items are never auto-deleted)
+- **Delete**: Right-click → Delete
+
+---
+
+## Compared to Alternatives
+
+| Feature | DropKit | Yoink | Dropover | Maccy | Paste |
+|---------|---------|-------|----------|-------|-------|
+| Floating file shelf | Yes | Yes | Yes | — | — |
+| Shake-to-summon shelf | Yes | — | — | — | — |
+| Clipboard history | Yes | — | — | Yes | Yes |
+| Shelf + clipboard in one app | Yes | — | — | — | — |
+| Menu bar icon | Yes | Yes | Yes | Yes | Yes |
+| Local storage, no cloud sync | Yes | Yes | Yes | Yes | No |
+| Price | Free (open source) | Paid | Paid | Free | Subscription |
+
+> Note: Feature comparisons are based on publicly available product information as of 2026. Verify current feature sets before making purchasing decisions.
+
+---
+
+## FAQ
+
+**Why does DropKit need Accessibility permission?**
+
+The shake-to-summon shelf detects mouse acceleration during a drag gesture using macOS's Accessibility APIs (`NSEvent.addGlobalMonitorForEvents`). Without this permission the OS blocks global mouse event monitoring. The permission is only used for shake detection — DropKit does not read screen content or control other apps.
+
+**How do I summon the shelf?**
+
+Two ways: (1) while actively dragging a file, shake your mouse left-right a few times — the shelf appears automatically; (2) press `⌘⇧S` from any app.
+
+**Where is my clipboard data stored? Is there a privacy mode?**
+
+All clipboard history is stored locally on your Mac at `~/Library/Application Support/DropKit/clipboard_history.json`. No data is sent to any server. DropKit skips items from apps on your configured blacklist (Settings → Clipboard → Excluded Apps) and respects the `org.nspasteboard.ConcealedType` flag used by password managers — those items are never recorded.
+
+**How do I install DropKit?**
+
+DropKit is currently source-only (App Store release in progress). Clone the repo, run `xcodegen generate` then `xcodebuild`, and move the resulting `DropKit.app` to `/Applications`. See [Build from Source](#build-from-source) above for full steps.
+
+**Can I set a limit on how many items the clipboard history keeps?**
+
+Yes. Open **Settings → Clipboard** to configure the maximum item count and the retention period (in days). Set either value to 0 to keep items indefinitely. Pinned (favorited) items are exempt from automatic cleanup.
+
+---
+
+## Requirements
+
+- macOS 14.0 (Sonoma) or later
+- Accessibility permission (for shake-to-summon shelf only)
+
+---
+
+## License
+
+MIT License — see [LICENSE](LICENSE) for details.

@@ -1,0 +1,13 @@
+# DropKit
+
+> DropKit is a macOS menu bar utility with a shake-to-summon floating file shelf and a searchable clipboard history.
+
+DropKit is an open-source macOS app for developers and power users who frequently move files between apps. It provides a floating file shelf that appears when you shake your mouse mid-drag, and a persistent clipboard history panel accessible via ⌘⇧V. Built with Swift 5.9 and SwiftUI/AppKit, targeting macOS 14.0 (Sonoma) and later.
+
+## Documentation
+- [README (English)](README.md): Full feature overview, installation guide, usage, FAQ, and alternatives comparison in English.
+- [中文文档 (README.zh-CN.md)](README.zh-CN.md): 功能介绍、安装说明、使用方法、常见问题及同类对比（中文版）。
+
+## Links
+- Repository: https://github.com/chenhuajinchj/DropKit
+- Releases: https://github.com/chenhuajinchj/DropKit/releases
