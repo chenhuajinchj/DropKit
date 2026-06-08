@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DropKit Support / 技术支持</title>
+<style>
+  :root{--bg:#0f1117;--card:#171a23;--text:#e6e8ee;--muted:#9aa3b2;--gold:#f0d040;--line:#262b38}
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;
+       background:var(--bg);color:var(--text);line-height:1.75;padding:48px 20px}
+  .wrap{max-width:720px;margin:0 auto}
+  h1{font-size:26px;color:var(--gold);margin-bottom:6px}
+  h2{font-size:16px;margin:26px 0 10px;border-left:3px solid var(--gold);padding-left:10px}
+  .meta{color:var(--muted);font-size:13px;margin-bottom:28px}
+  p,li{color:var(--text);font-size:15px;margin-bottom:10px}
+  ul{padding-left:22px;margin-bottom:10px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:22px 24px;margin-bottom:22px}
+  .lang{color:var(--muted);font-size:13px;letter-spacing:1px;text-transform:uppercase;margin-bottom:6px}
+  .email{display:inline-block;background:var(--gold);color:#1a1a1a;font-weight:600;
+         padding:10px 18px;border-radius:8px;text-decoration:none;margin:6px 0}
+  a{color:var(--gold)}
+  details{margin-bottom:10px}
+  summary{cursor:pointer;font-weight:600;padding:6px 0}
+  footer{color:var(--muted);font-size:13px;text-align:center;margin-top:40px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>DropKit Support</h1>
+  <p class="meta">Menu bar shelf &amp; clipboard history for macOS · macOS 菜单栏搁置架与剪贴板历史</p>
+
+  <div class="card">
+    <div class="lang">English</div>
+    <p>Need help, found a bug, or have a feature request? Reach out — we usually reply within a couple of days.</p>
+    <a class="email" href="mailto:support@xiaochens.com">support@xiaochens.com</a>
+    <h2>Common questions</h2>
+    <details><summary>The shake-to-show shelf doesn't work</summary>
+      <p>Grant Accessibility permission in System Settings → Privacy &amp; Security → Accessibility, then enable DropKit. The shake gesture and global shortcuts need this permission. The menu bar still works without it.</p></details>
+    <details><summary>Where is my clipboard history stored?</summary>
+      <p>Only on your Mac. DropKit never uploads anything. See the <a href="privacy.html">Privacy Policy</a>.</p></details>
+    <details><summary>How do I start DropKit at login?</summary>
+      <p>Open DropKit Settings → General → enable "Launch at login".</p></details>
+  </div>
+
+  <div class="card">
+    <div class="lang">中文</div>
+    <p>需要帮助、发现 Bug、或有功能建议？欢迎联系我们——通常两三天内回复。</p>
+    <a class="email" href="mailto:support@xiaochens.com">support@xiaochens.com</a>
+    <h2>常见问题</h2>
+    <details><summary>"摇动"呼出搁置架没反应</summary>
+      <p>请在「系统设置 → 隐私与安全性 → 辅助功能」中授权并勾选 DropKit。摇动手势和全局快捷键需要这个权限；不授权也能通过菜单栏正常使用。</p></details>
+    <details><summary>我的剪贴板历史存在哪里？</summary>
+      <p>只存在你的 Mac 本地，DropKit 从不上传任何内容。详见<a href="privacy.html">隐私政策</a>。</p></details>
+    <details><summary>怎么设置开机自启动？</summary>
+      <p>打开 DropKit 设置 → 通用 → 开启「开机自启动」。</p></details>
+  </div>
+
+  <footer>DropKit · <a href="privacy.html">Privacy Policy / 隐私政策</a></footer>
+</div>
+</body>
+</html>

@@ -31,8 +31,7 @@ targets:
         excludes:
           - "**/*.md"
           - ".DS_Store"
-    resources:
-      - Resources
+      - path: Resources
     dependencies:
       - package: KeyboardShortcuts
     info:
@@ -47,6 +46,7 @@ targets:
         NSPrincipalClass: NSApplication
         NSHighResolutionCapable: true
         LSUIElement: true
+        ITSAppUsesNonExemptEncryption: false
     entitlements:
       path: Sources/DropKit.entitlements
       properties:

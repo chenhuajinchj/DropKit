@@ -6,7 +6,8 @@
 - Subtitle: `Menu bar shelf and clipboard history`
 - Primary category: `Utilities`
 - Platform: `macOS`
-- Target version: `1.0.5`
+- Target version: `1.0.6`
+- Bundle ID: `com.dropkit.DropKit`
 
 ## Description
 
@@ -20,11 +21,12 @@ DropKit focuses on fast access, low overhead, and native macOS behavior for ever
 
 `clipboard,menu bar,files,shelf,productivity,drag and drop`
 
-## What's New in 1.0.5
+## What's New in 1.0.6
 
-- Improved thumbnail and clipboard performance
-- Fixed watched-folder feedback loops caused by thumbnail generation
-- Improved overall stability and file-monitoring behavior
+- More reliable watched-folder monitoring, with safeguards against stale file reports.
+- Smarter thumbnail memory handling that releases cached images under system memory pressure.
+- Smoother shelf scrolling and selection with lazy-loaded thumbnails.
+- General stability and performance improvements.
 
 ## Accessibility Permission Explanation
 
@@ -56,8 +58,12 @@ Re-check this section after any future SDK or network integration.
 
 ## URLs To Prepare
 
-- Support URL: required in App Store Connect
-- Privacy Policy URL: required in App Store Connect
+Two pages have been drafted and will be hosted before submission (see `docs/app-store/web/`):
+
+- Support URL: `https://xiaochens.com/dropkit/support.html`  _(待部署后确认最终地址)_
+- Privacy Policy URL: `https://xiaochens.com/dropkit/privacy.html`  _(待部署后确认最终地址)_
+
+Both are static pages. The privacy page states clearly that DropKit collects no data; the support page lists a contact email for user issues.
 
 ## Screenshot Plan
 
