@@ -58,12 +58,12 @@ Re-check this section after any future SDK or network integration.
 
 ## URLs To Prepare
 
-Two pages have been drafted and will be hosted before submission (see `docs/app-store/web/`):
+Hosted on GitHub Pages (gh-pages branch of this repo), independent of the xiaochens.com homepage migration:
 
-- Support URL: `https://xiaochens.com/dropkit/support.html`  _(待部署后确认最终地址)_
-- Privacy Policy URL: `https://xiaochens.com/dropkit/privacy.html`  _(待部署后确认最终地址)_
+- Support URL: `https://chenyuxiaojin.github.io/DropKit/support.html`
+- Privacy Policy URL: `https://chenyuxiaojin.github.io/DropKit/privacy.html`
 
-Both are static pages. The privacy page states clearly that DropKit collects no data; the support page lists a contact email for user issues.
+Both are static pages (source in `docs/app-store/web/`). The privacy page states clearly that DropKit collects no data; the support page lists a contact email for user issues. To update them, edit the source and run `docs/app-store/web/deploy.sh`.
 
 ## Screenshot Plan
 
