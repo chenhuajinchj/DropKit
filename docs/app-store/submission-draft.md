@@ -2,12 +2,14 @@
 
 ## App Basics
 
-- App name: `DropKit`
+- App name: `DropKit Clipboard`
 - Subtitle: `Menu bar shelf and clipboard history`
 - Primary category: `Utilities`
 - Platform: `macOS`
 - Target version: `1.0.6`
 - Bundle ID: `com.dropkit.DropKit`
+- SKU: `dropkit-macos-1`
+- Review status: Submitted for App Review on 2026-06-10
 
 ## Description
 
