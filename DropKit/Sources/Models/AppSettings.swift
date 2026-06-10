@@ -24,6 +24,18 @@ class AppSettings {
         static let shelfExpandedHeight = "shelfExpandedHeight"
     }
 
+    static let builtInSensitiveClipboardBundleIds: Set<String> = [
+        "com.1password.1password",
+        "com.agilebits.onepassword7",
+        "com.bitwarden.desktop",
+        "com.dashlane.Dashlane",
+        "com.dashlane.dashlanephonefinal",
+        "com.enpass.Enpass",
+        "com.lastpass.LastPass",
+        "com.roboform.Mac",
+        "org.keepassxc.keepassxc"
+    ]
+
     // 摇晃检测参数
     var shakeMinShakes: Int {
         didSet { defaults.set(shakeMinShakes, forKey: Keys.shakeMinShakes) }
@@ -59,7 +71,8 @@ class AppSettings {
     }
 
     func isBlacklisted(_ bundleId: String) -> Bool {
-        clipboardBlacklistEnabled && clipboardBlacklist.contains(bundleId)
+        Self.builtInSensitiveClipboardBundleIds.contains(bundleId)
+            || (clipboardBlacklistEnabled && clipboardBlacklist.contains(bundleId))
     }
 
     // 开机自启动

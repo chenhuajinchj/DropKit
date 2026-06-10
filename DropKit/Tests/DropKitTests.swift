@@ -2,6 +2,65 @@ import XCTest
 @testable import DropKit
 
 final class DropKitTests: XCTestCase {
+    func testDragMonitorDoesNotRegisterGlobalEventsWithoutAccessibilityPermission() {
+        let eventMonitor = RecordingGlobalEventMonitor()
+        let monitor = DragMonitor(
+            permissionChecker: { false },
+            eventMonitor: eventMonitor
+        )
+
+        XCTAssertFalse(monitor.start())
+        XCTAssertTrue(eventMonitor.addedMasks.isEmpty)
+    }
+
+    func testShakeDetectorDoesNotRegisterGlobalEventsWithoutAccessibilityPermission() {
+        let eventMonitor = RecordingGlobalEventMonitor()
+        let detector = ShakeDetector(
+            permissionChecker: { false },
+            eventMonitor: eventMonitor
+        )
+
+        XCTAssertFalse(detector.start())
+        XCTAssertTrue(eventMonitor.addedMasks.isEmpty)
+    }
+
+    func testBuiltInSensitiveClipboardAppsAreAlwaysIgnored() throws {
+        let defaults = try makeDefaults()
+        let settings = AppSettings(
+            defaults: defaults,
+            launchAtLoginManager: StubLaunchAtLoginManager(),
+            bookmarkStore: FolderBookmarkStore(
+                defaults: defaults,
+                key: "watchedFolderBookmark",
+                bookmarkProvider: StubBookmarkProvider()
+            )
+        )
+
+        XCTAssertFalse(settings.clipboardBlacklistEnabled)
+        XCTAssertTrue(settings.isBlacklisted("com.1password.1password"))
+        XCTAssertTrue(settings.isBlacklisted("com.bitwarden.desktop"))
+    }
+
+    func testCustomClipboardBlacklistStillRequiresUserToggle() throws {
+        let defaults = try makeDefaults()
+        defaults.set(["com.example.Notes"], forKey: "clipboardBlacklist")
+        let settings = AppSettings(
+            defaults: defaults,
+            launchAtLoginManager: StubLaunchAtLoginManager(),
+            bookmarkStore: FolderBookmarkStore(
+                defaults: defaults,
+                key: "watchedFolderBookmark",
+                bookmarkProvider: StubBookmarkProvider()
+            )
+        )
+
+        XCTAssertFalse(settings.isBlacklisted("com.example.Notes"))
+
+        settings.clipboardBlacklistEnabled = true
+
+        XCTAssertTrue(settings.isBlacklisted("com.example.Notes"))
+    }
+
     func testSettingWatchedFolderPersistsBookmarkAndResolvedPath() throws {
         let defaults = try makeDefaults()
         let bookmarkProvider = StubBookmarkProvider()
@@ -104,4 +163,18 @@ private struct FailingBookmarkProvider: FolderBookmarking {
 private struct StubLaunchAtLoginManager: LaunchAtLoginManaging {
     func currentStatus() -> Bool { false }
     func setEnabled(_ enabled: Bool) throws {}
+}
+
+private final class RecordingGlobalEventMonitor: GlobalEventMonitoring {
+    private(set) var addedMasks: [NSEvent.EventTypeMask] = []
+    private(set) var removedCount = 0
+
+    func addGlobalMonitor(matching mask: NSEvent.EventTypeMask, handler: @escaping (NSEvent) -> Void) -> Any? {
+        addedMasks.append(mask)
+        return NSObject()
+    }
+
+    func removeMonitor(_ monitor: Any) {
+        removedCount += 1
+    }
 }

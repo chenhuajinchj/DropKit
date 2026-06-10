@@ -10,9 +10,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Privacy manifest (`PrivacyInfo.xcprivacy`) declaring UserDefaults (CA92.1) and file-timestamp (3B52.1) Required Reason API usage, plus no-tracking / no-data-collection declarations for Mac App Store submission.
 - `ITSAppUsesNonExemptEncryption=false` in Info.plist to clear App Store export-compliance for each upload.
+- Built-in clipboard exclusions for common password managers so sensitive clipboard sources are skipped even before a custom blacklist is enabled.
 
 ### Fixed
 - Resources (`Assets.xcassets`, privacy manifest) were not bundled because `project.yml` used an invalid `resources:` target key; moved them under `sources:` so the app icon and privacy manifest are now compiled into the build.
+- Drag and shake global event monitors now check Accessibility permission before registering, adding a second code-level guard around the optional shake gesture.
 
 ## [1.0.6] - 2026-04-24
 

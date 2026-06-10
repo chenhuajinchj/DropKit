@@ -30,12 +30,13 @@ DropKit focuses on fast access, low overhead, and native macOS behavior for ever
 
 ## Accessibility Permission Explanation
 
-DropKit requests Accessibility permission only for the optional shake gesture used while dragging files. Without this permission, the app still works through the menu bar and keyboard shortcuts.
+DropKit uses Accessibility permission only for the optional shake gesture used while dragging files. If Accessibility permission is not granted, DropKit does not register its global drag/shake event monitors. The app still works through the menu bar, keyboard shortcuts, clipboard history, and user-selected watched folders.
 
 ## Review Notes
 
 - DropKit is a menu bar app for temporary file staging and clipboard history.
 - Accessibility permission is used only to observe global drag-related mouse movement for the optional shake-to-show shelf gesture.
+- DropKit checks Accessibility permission before registering global drag/shake monitors and does not start those monitors when permission is missing.
 - Core app functionality remains available without Accessibility permission:
   - menu bar access
   - keyboard shortcuts
@@ -51,6 +52,7 @@ Current draft based on the local codebase:
 - Data collection: `No data collected`
 - Rationale:
   - clipboard history is stored locally on device
+  - clipboard entries from common password managers are skipped by default, and password-manager concealed pasteboard types are ignored
   - watched-folder access is user-selected and local
   - no analytics, crash SDK, or third-party telemetry is currently integrated
 

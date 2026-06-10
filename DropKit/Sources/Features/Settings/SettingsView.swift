@@ -189,7 +189,7 @@ struct SettingsView: View {
             Section {
                 Toggle("忽略密码管理器内容", isOn: $settings.ignoreConcealed)
             } footer: {
-                Text("自动跳过来自 1Password、LastPass 等的复制内容")
+                Text("自动跳过带隐藏标记的复制内容；常见密码管理器始终不会记录。")
             }
 
             Section {
@@ -215,7 +215,7 @@ struct SettingsView: View {
                     }
                 }
             } footer: {
-                Text("忽略来自指定应用的剪切板内容")
+                Text("除内置敏感应用外，也可手动指定更多应用。")
             }
 
             Section {

@@ -136,6 +136,7 @@ Two ways: (1) while actively dragging a file, shake your mouse left-right a few 
 **Where is my clipboard data stored? Is there a privacy mode?**
 
 All clipboard history is stored locally on your Mac at `~/Library/Application Support/DropKit/clipboard_history.json`. No data is sent to any server. DropKit skips items from apps on your configured blacklist (Settings → Clipboard → Excluded Apps) and respects the `org.nspasteboard.ConcealedType` flag used by password managers — those items are never recorded.
+Common password managers are also skipped by default, even before you add any custom excluded apps.
 
 **How do I install DropKit?**
 

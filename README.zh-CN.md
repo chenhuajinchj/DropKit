@@ -136,6 +136,7 @@ DropKit 需要辅助功能权限来检测鼠标摇晃手势：
 **剪贴板数据存在哪里？有没有隐私保护？**
 
 所有剪贴板历史均存储在本机：`~/Library/Application Support/DropKit/clipboard_history.json`，不会上传到任何服务器。DropKit 跳过应用黑名单（设置 → 剪贴板 → 排除应用）中的应用，并自动识别密码管理器使用的 `org.nspasteboard.ConcealedType` 标记——这类内容不会被记录。
+常见密码管理器也会默认跳过，即使你还没有手动加入应用黑名单。
 
 **怎么安装 DropKit？**
 
