@@ -124,6 +124,17 @@ final class DropKitTests: XCTestCase {
         XCTAssertNil(defaults.data(forKey: "watchedFolderBookmark"))
     }
 
+    func testAddItemReturnsWhetherAFileWasInserted() throws {
+        let viewModel = ShelfViewModel()
+        let fileURL = try makeTemporaryFile()
+
+        XCTAssertTrue(viewModel.addItem(url: fileURL))
+        XCTAssertFalse(viewModel.addItem(url: fileURL))
+        XCTAssertEqual(viewModel.items.count, 1)
+
+        viewModel.clearAll()
+    }
+
     func testLatestWorkDebouncerRunsOnlyMostRecentScheduledWork() {
         let debouncer = LatestWorkDebouncer()
         let queue = DispatchQueue(label: "DropKitTests.LatestWorkDebouncer")
@@ -188,6 +199,18 @@ final class DropKitTests: XCTestCase {
         }
         defaults.removePersistentDomain(forName: suiteName)
         return defaults
+    }
+
+    private func makeTemporaryFile() throws -> URL {
+        let directory = FileManager.default.temporaryDirectory
+            .appendingPathComponent("DropKitTests.\(UUID().uuidString)", isDirectory: true)
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        let fileURL = directory.appendingPathComponent("screenshot.png")
+        try Data("dropkit".utf8).write(to: fileURL)
+        addTeardownBlock {
+            try? FileManager.default.removeItem(at: directory)
+        }
+        return fileURL
     }
 
     private func waitForMainQueueTurn() async {

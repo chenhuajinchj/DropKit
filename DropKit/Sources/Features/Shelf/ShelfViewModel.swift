@@ -47,7 +47,8 @@ class ShelfViewModel {
 
     // MARK: - Item Management
 
-    func addItem(url: URL) {
+    @discardableResult
+    func addItem(url: URL) -> Bool {
         // 检查是否是 SwiftUI 拖拽产生的临时文件
         let isSwiftUIDragCache = url.path.contains("com.apple.SwiftUI.Drag")
 
@@ -56,25 +57,25 @@ class ShelfViewModel {
             let fileName = url.lastPathComponent
             // 检查 fileNames 缓存
             if fileNames.contains(fileName) {
-                return
+                return false
             }
             // 检查 items 中是否已有相同文件名的文件（原始文件）
             if items.contains(where: { $0.url.lastPathComponent == fileName }) {
-                return
+                return false
             }
             fileNames.insert(fileName)
         } else {
             // 先用路径检查是否已存在（最可靠的方式）
             let standardPath = url.standardizedFileURL.path
             if items.contains(where: { $0.url.standardizedFileURL.path == standardPath }) {
-                return
+                return false
             }
 
             // 再用 fileResourceIdentifier 加入缓存（用于后续快速查重）
             if let fileID = try? url.resourceValues(forKeys: [.fileResourceIdentifierKey]).fileResourceIdentifier {
                 let idString = "\(fileID)"
                 if fileIdentifiers.contains(idString) {
-                    return
+                    return false
                 }
                 fileIdentifiers.insert(idString)
             }
@@ -91,6 +92,8 @@ class ShelfViewModel {
             let removed = items.removeLast()
             removeFromCache(removed)
         }
+
+        return true
     }
 
     func addItems(urls: [URL]) {

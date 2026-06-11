@@ -161,7 +161,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         let settings = AppSettings.shared
 
         // 添加到悬浮窗
-        shelfPanel?.viewModel.addItem(url: url)
+        let didAddItem = shelfPanel?.viewModel.addItem(url: url) ?? false
+        guard didAddItem else { return }
 
         // 自动复制到剪切板
         if settings.autoCopyToClipboard {
