@@ -124,6 +124,33 @@ final class DropKitTests: XCTestCase {
         XCTAssertNil(defaults.data(forKey: "watchedFolderBookmark"))
     }
 
+    @MainActor
+    func testMainRunLoopCoalescerRunsMultipleRequestsOncePerTurn() async {
+        let coalescer = MainRunLoopCoalescer()
+        var runCount = 0
+
+        coalescer.schedule {
+            runCount += 1
+        }
+        coalescer.schedule {
+            runCount += 1
+        }
+
+        XCTAssertEqual(runCount, 0)
+
+        await waitForMainQueueTurn()
+
+        XCTAssertEqual(runCount, 1)
+
+        coalescer.schedule {
+            runCount += 1
+        }
+
+        await waitForMainQueueTurn()
+
+        XCTAssertEqual(runCount, 2)
+    }
+
     private func makeDefaults() throws -> UserDefaults {
         let suiteName = "DropKitTests.\(UUID().uuidString)"
         guard let defaults = UserDefaults(suiteName: suiteName) else {
@@ -131,6 +158,14 @@ final class DropKitTests: XCTestCase {
         }
         defaults.removePersistentDomain(forName: suiteName)
         return defaults
+    }
+
+    private func waitForMainQueueTurn() async {
+        await withCheckedContinuation { continuation in
+            DispatchQueue.main.async {
+                continuation.resume()
+            }
+        }
     }
 }
 

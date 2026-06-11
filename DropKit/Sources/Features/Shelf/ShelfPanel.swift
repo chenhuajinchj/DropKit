@@ -2,6 +2,24 @@ import AppKit
 import SwiftUI
 import Combine
 
+@MainActor
+final class MainRunLoopCoalescer {
+    private var isScheduled = false
+
+    func schedule(_ action: @escaping @MainActor () -> Void) {
+        guard !isScheduled else { return }
+        isScheduled = true
+
+        DispatchQueue.main.async { [weak self] in
+            Task { @MainActor in
+                guard let self else { return }
+                self.isScheduled = false
+                action()
+            }
+        }
+    }
+}
+
 class ShelfPanel: NSPanel {
     let viewModel = ShelfViewModel()
     private var clickMonitor: Any?
@@ -9,6 +27,7 @@ class ShelfPanel: NSPanel {
     private var isDocked = false
     private var windowMoveObserver: Any?
     private var windowResizeObserver: Any?
+    private let sizeUpdateCoalescer = MainRunLoopCoalescer()
 
     // 尺寸限制常量
     private let collapsedSize = NSSize(width: 200, height: 200)
@@ -104,12 +123,7 @@ class ShelfPanel: NSPanel {
             } onChange: {
                 Task { @MainActor [weak self] in
                     guard let self = self else { return }
-                    self.updatePanelSize()
-
-                    // 文件全部拖出后自动关闭
-                    if self.viewModel.items.isEmpty && self.isVisible {
-                        self.hidePanel()
-                    }
+                    self.schedulePanelLayoutUpdate()
 
                     // 继续监听下一次变化
                     observe()
@@ -123,7 +137,19 @@ class ShelfPanel: NSPanel {
         updatePanelSize()
     }
 
-    private func updatePanelSize() {
+    private func schedulePanelLayoutUpdate() {
+        sizeUpdateCoalescer.schedule { [weak self] in
+            guard let self = self else { return }
+            self.updatePanelSize(animated: false)
+
+            // 文件全部拖出后自动关闭
+            if self.viewModel.items.isEmpty && self.isVisible {
+                self.hidePanel()
+            }
+        }
+    }
+
+    private func updatePanelSize(animated: Bool = false) {
         let newSize: NSSize
 
         switch viewModel.viewState {
@@ -163,10 +189,20 @@ class ShelfPanel: NSPanel {
             y: currentCenter.y - newSize.height / 2
         )
 
-        NSAnimationContext.runAnimationGroup { context in
-            context.duration = 0.2
-            context.timingFunction = CAMediaTimingFunction(name: .easeInEaseOut)
-            self.animator().setFrame(NSRect(origin: newOrigin, size: newSize), display: true)
+        let newFrame = NSRect(origin: newOrigin, size: newSize)
+
+        if animated {
+            NSAnimationContext.runAnimationGroup { context in
+                context.duration = 0.2
+                context.timingFunction = CAMediaTimingFunction(name: .easeInEaseOut)
+                self.animator().setFrame(newFrame, display: true)
+            }
+        } else {
+            NSAnimationContext.runAnimationGroup { context in
+                context.duration = 0
+                context.allowsImplicitAnimation = false
+                self.setFrame(newFrame, display: true, animate: false)
+            }
         }
     }
 
