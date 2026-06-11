@@ -1,5 +1,36 @@
 import Foundation
 
+final class LatestWorkDebouncer {
+    private let lock = NSLock()
+    private var generation: UInt64 = 0
+
+    func schedule(after delay: DispatchTimeInterval, on queue: DispatchQueue, execute work: @escaping () -> Void) {
+        let scheduledGeneration = nextGeneration()
+
+        queue.asyncAfter(deadline: .now() + delay) { [weak self] in
+            guard self?.isCurrentGeneration(scheduledGeneration) == true else { return }
+            work()
+        }
+    }
+
+    func cancel() {
+        _ = nextGeneration()
+    }
+
+    private func nextGeneration() -> UInt64 {
+        lock.lock()
+        defer { lock.unlock() }
+        generation &+= 1
+        return generation
+    }
+
+    private func isCurrentGeneration(_ candidate: UInt64) -> Bool {
+        lock.lock()
+        defer { lock.unlock() }
+        return generation == candidate
+    }
+}
+
 /// 文件夹监听服务，检测新文件并触发回调
 class FolderMonitor {
     private var source: DispatchSourceFileSystemObject?
@@ -8,6 +39,7 @@ class FolderMonitor {
     private var watchedURL: URL?
     private var isAccessingSecurityScopedResource = false
     private let queue = DispatchQueue(label: "com.dropkit.foldermonitor", qos: .utility)
+    private let eventDebouncer = LatestWorkDebouncer()
 
     /// 每次 start / stop 都会 +1。用于让 queue 上 asyncAfter 的延迟任务自行作废，
     /// 防止"0.3s 窗口内 stop → start 新目录"导致旧任务污染新状态。
@@ -95,6 +127,7 @@ class FolderMonitor {
     func stop() {
         let currentWatchedURL = watchedURL
         generation &+= 1
+        eventDebouncer.cancel()
         source?.cancel()
         source = nil
         watchedURL = nil
@@ -126,8 +159,8 @@ class FolderMonitor {
         guard let folderURL = watchedURL else { return }
         let currentGen = generation
 
-        // 延迟处理，确保文件写入完成
-        queue.asyncAfter(deadline: .now() + 0.3) { [weak self] in
+        // 延迟并合并处理，避免一次截图保存触发多次目录扫描。
+        eventDebouncer.schedule(after: .milliseconds(300), on: queue) { [weak self] in
             guard let self, self.generation == currentGen else { return }
             self.checkForNewFiles(at: folderURL, generation: currentGen)
         }

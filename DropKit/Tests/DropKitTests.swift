@@ -124,6 +124,36 @@ final class DropKitTests: XCTestCase {
         XCTAssertNil(defaults.data(forKey: "watchedFolderBookmark"))
     }
 
+    func testLatestWorkDebouncerRunsOnlyMostRecentScheduledWork() {
+        let debouncer = LatestWorkDebouncer()
+        let queue = DispatchQueue(label: "DropKitTests.LatestWorkDebouncer")
+        let expectation = expectation(description: "latest work runs")
+        let lock = NSLock()
+        var values: [Int] = []
+
+        expectation.expectedFulfillmentCount = 1
+
+        debouncer.schedule(after: .milliseconds(20), on: queue) {
+            lock.lock()
+            values.append(1)
+            lock.unlock()
+            expectation.fulfill()
+        }
+        debouncer.schedule(after: .milliseconds(20), on: queue) {
+            lock.lock()
+            values.append(2)
+            lock.unlock()
+            expectation.fulfill()
+        }
+
+        wait(for: [expectation], timeout: 1.0)
+
+        lock.lock()
+        let capturedValues = values
+        lock.unlock()
+        XCTAssertEqual(capturedValues, [2])
+    }
+
     @MainActor
     func testMainRunLoopCoalescerRunsMultipleRequestsOncePerTurn() async {
         let coalescer = MainRunLoopCoalescer()
